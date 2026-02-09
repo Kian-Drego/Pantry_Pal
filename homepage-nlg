@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PantryPal | Home Feed</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Outfit:wght@300;400;600&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Outfit', sans-serif; }
+        .brand-font { font-family: 'Fredoka One', cursive; }
+        .text-coral { color: #E97D5B; }
+        .bg-coral { background-color: #E97D5B; }
+        .sidebar-item:hover { color: #E97D5B; }
+    </style>
+</head>
+<body class="bg-gray-50 flex min-h-screen">
+
+    <aside class="w-72 bg-white border-r border-gray-100 flex flex-col p-8 fixed h-full">
+        <div class="text-3xl brand-font text-coral mb-12">PantryPal</div>
+
+        <nav class="space-y-6 flex-grow">
+            <a href="homepage-nlg.html" class="flex items-center gap-4 bg-coral text-white px-5 py-4 rounded-2xl font-semibold shadow-lg shadow-orange-100">
+                <i data-lucide="home"></i> Home
+            </a>
+            <a href="search-nlg.html" class="flex items-center gap-4 px-5 py-2 text-gray-500 font-semibold sidebar-item transition-all">
+                <i data-lucide="search"></i> Search
+            </a>
+        </nav>
+
+        <div class="border-t border-gray-100 pt-8">
+            <a href="loginpage.html" class="flex items-center gap-4 px-5 py-2 text-gray-500 font-semibold sidebar-item transition-all">
+                <i data-lucide="log-out"></i> Log in
+            </a>
+        </div>
+    </aside>
+
+    <main class="ml-72 flex-grow p-12 bg-white">
+        
+        <header class="mb-10">
+            <h1 class="text-5xl brand-font text-coral mb-2">Fresh Feed</h1>
+            <p class="text-gray-500 text-lg">Discover the tastiest recipes from our chefs.</p>
+        </header>
+
+        <div class="mt-12 w-full aspect-[2/1] bg-gray-50 rounded-[40px] border border-gray-100 flex flex-col items-center justify-center text-center p-8">
+            <h2 class="text-3xl brand-font text-gray-800 mb-2">No recipes yet</h2>
+            <p class="text-gray-400 text-lg">Be the first to share your culinary masterpiece!</p>
+        </div>
+
+    </main>
+
+    <script>
+        // Initialize Lucide Icons
+        lucide.createIcons();
+    </script>
+</body>
+</html>

@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PantryPal | Profile</title>
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Outfit:wght@300;400;600&display=swap" rel="stylesheet">
+    
+    <style>
+        body { font-family: 'Outfit', sans-serif; margin: 0; padding: 0; }
+        .brand-font { font-family: 'Fredoka One', cursive; }
+        .text-coral { color: #E97D5B; }
+        .bg-coral { background-color: #E97D5B; }
+        .border-coral { border-color: #E97D5B; }
+        
+        .sidebar-item:hover { color: #E97D5B; transform: translateX(4px); }
+        
+        #editModal.hidden { display: none; }
+        #editModal:not(.hidden) { display: block; }
+        
+        .modal-animate {
+            animation: modalIn 0.3s ease-out;
+        }
+
+        @keyframes modalIn {
+            from { opacity: 0; transform: translate(-50%, -48%) scale(0.95); }
+            to { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+        }
+    </style>
+</head>
+<body class="bg-gray-50 flex min-h-screen">
+
+    <aside class="w-72 bg-white border-r border-gray-100 flex flex-col p-8 fixed h-full z-10">
+        <div class="text-3xl brand-font text-coral mb-12">PantryPal</div>
+        <nav class="space-y-6 flex-grow text-gray-500 font-semibold">
+            <a href="homepage.html" class="flex items-center gap-4 px-5 py-2 sidebar-item transition-all"><i data-lucide="home"></i> Home</a>
+            <a href="search.html" class="flex items-center gap-4 px-5 py-2 sidebar-item transition-all"><i data-lucide="search"></i> Search</a>
+            <a href="Create.html" class="flex items-center gap-4 px-5 py-2 sidebar-item transition-all"><i data-lucide="plus-square"></i> Create</a>
+            <a href="leaderboard.html" class="flex items-center gap-4 px-5 py-2 sidebar-item transition-all"><i data-lucide="trophy"></i> Leaderboard</a>
+            <a href="analytics.html" class="flex items-center gap-4 px-5 py-2 sidebar-item transition-all"><i data-lucide="bar-chart-2"></i> Analytics</a>
+            <a href="profilepage.html" class="flex items-center gap-4 bg-coral text-white px-5 py-4 rounded-2xl shadow-lg shadow-orange-100">
+                <i data-lucide="user"></i> Profile
+            </a>
+        </nav>
+        <div class="border-t border-gray-100 pt-8">
+            <a href="index.html" class="flex items-center gap-4 px-5 py-2 text-gray-500 font-semibold sidebar-item transition-all"><i data-lucide="log-out"></i> Log out</a>
+        </div>
+    </aside>
+
+    <main class="ml-72 flex-grow p-12 bg-white min-h-screen">
+        
+        <div class="flex flex-col items-center text-center max-w-4xl mx-auto mb-16">
+            <input type="file" id="avatarInput" accept="image/*" class="hidden" onchange="previewImage(event)">
+
+            <div class="group relative w-40 h-40 mb-6 cursor-pointer" onclick="document.getElementById('avatarInput').click()">
+                <div class="w-40 h-40 bg-gray-100 rounded-full border-4 border-white shadow-xl flex items-center justify-center text-gray-300 overflow-hidden">
+                    <i id="placeholderIcon" data-lucide="user" class="w-16 h-16"></i>
+                    <img id="profilePreview" src="" class="hidden w-full h-full object-cover">
+                </div>
+                <div class="absolute inset-0 bg-black/30 rounded-full flex items-center justify-center text-white opacity-0 group-hover:opacity-100 transition-opacity">
+                    <i data-lucide="camera" class="w-6 h-6"></i>
+                </div>
+            </div>
+
+            <h1 class="text-4xl brand-font text-gray-900 mb-2">Chef PantryPal</h1>
+            <p class="text-coral font-bold mb-4">@pantry_chef</p>
+            
+            <p class="text-gray-500 text-lg max-w-xl">
+                Home cook turned recipe developer. I believe that anyone can cook if they have the right pantry staples. 🍝
+            </p>
+
+            <button onclick="toggleModal()" class="mt-6 px-8 py-3 border-2 border-gray-100 rounded-2xl font-bold text-gray-700 hover:bg-gray-50 hover:border-coral/30 hover:text-coral transition-all flex items-center gap-2 group">
+                <i data-lucide="settings-2" class="w-4 h-4 group-hover:rotate-90 transition-transform duration-300"></i>
+                Edit Profile
+            </button>
+
+            <div class="flex gap-12 mt-10">
+                <div class="text-center">
+                    <p class="text-2xl font-bold text-gray-900">14</p>
+                    <p class="text-xs font-bold text-gray-400 uppercase tracking-widest">Recipes</p>
+                </div>
+                <div class="text-center">
+                    <p class="text-2xl font-bold text-gray-900">1.2k</p>
+                    <p class="text-xs font-bold text-gray-400 uppercase tracking-widest">Followers</p>
+                </div>
+                <div class="text-center">
+                    <p class="text-2xl font-bold text-gray-900">248</p>
+                    <p class="text-xs font-bold text-gray-400 uppercase tracking-widest">Following</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="max-w-5xl mx-auto">
+            <div class="flex gap-10 border-b border-gray-100 mb-10 pb-1 font-bold">
+                <button class="text-gray-900 border-b-4 border-coral pb-4">My Recipes</button>
+                <button class="text-gray-400 pb-4 hover:text-gray-600 transition-colors">Saved</button>
+            </div>
+
+            <div class="py-20 bg-gray-50 rounded-[40px] border border-dashed border-gray-200 text-center">
+                <div class="inline-flex p-5 bg-white rounded-full shadow-sm mb-4">
+                    <i data-lucide="utensils-crosses" class="text-gray-300 w-8 h-8"></i>
+                </div>
+                <h3 class="text-xl font-bold text-gray-800">No recipes yet</h3>
+                <p class="text-gray-400 mt-2">Ready to share your secret ingredient?</p>
+            </div>
+        </div>
+    </main>
+
+    <div id="editModal" class="fixed inset-0 z-50 hidden">
+        <div class="absolute inset-0 bg-gray-900/40 backdrop-blur-sm" onclick="toggleModal()"></div>
+        
+        <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-white w-full max-w-lg rounded-[32px] shadow-2xl p-10 modal-animate">
+            <div class="flex justify-between items-center mb-8">
+                <h2 class="text-2xl brand-font text-gray-900">Edit Profile</h2>
+                <button onclick="toggleModal()" class="p-2 hover:bg-gray-100 rounded-full transition-colors text-gray-400">
+                    <i data-lucide="x" class="w-6 h-6"></i>
+                </button>
+            </div>
+
+            <form class="space-y-6" onsubmit="saveProfile(event)">
+                <div>
+                    <label class="block text-sm font-bold text-gray-700 mb-2 ml-1">Full Name</label>
+                    <input type="text" id="editName" value="Chef PantryPal" class="w-full px-5 py-4 bg-gray-50 border-2 border-transparent rounded-2xl focus:bg-white focus:border-coral focus:ring-0 outline-none transition-all font-semibold text-gray-700">
+                </div>
+
+                <div>
+                    <label class="block text-sm font-bold text-gray-700 mb-2 ml-1">Username</label>
+                    <div class="relative">
+                        <span class="absolute left-5 top-1/2 -translate-y-1/2 text-gray-400 font-bold">@</span>
+                        <input type="text" id="editUsername" value="pantry_chef" class="w-full pl-10 pr-5 py-4 bg-gray-50 border-2 border-transparent rounded-2xl focus:bg-white focus:border-coral focus:ring-0 outline-none transition-all font-semibold text-gray-700">
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-sm font-bold text-gray-700 mb-2 ml-1">Bio</label>
+                    <textarea id="editBio" rows="3" class="w-full px-5 py-4 bg-gray-50 border-2 border-transparent rounded-2xl focus:bg-white focus:border-coral focus:ring-0 outline-none transition-all font-semibold text-gray-700 resize-none">Home cook turned recipe developer. I believe that anyone can cook if they have the right pantry staples. 🍝</textarea>
+                </div>
+
+                <div class="flex gap-4 pt-4">
+                    <button type="button" onclick="toggleModal()" class="flex-1 px-8 py-4 border-2 border-gray-100 rounded-2xl font-bold text-gray-500 hover:bg-gray-50 transition-all">
+                        Cancel
+                    </button>
+                    <button type="submit" class="flex-1 px-8 py-4 bg-coral text-white rounded-2xl font-bold shadow-lg shadow-orange-100 hover:brightness-105 active:scale-95 transition-all">
+                        Save Changes
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        lucide.createIcons();
+
+        function toggleModal() {
+            const modal = document.getElementById('editModal');
+            const isHidden = modal.classList.toggle('hidden');
+            document.body.style.overflow = isHidden ? 'auto' : 'hidden';
+        }
+
+        // --- NEW: Live Image Preview Logic ---
+        function previewImage(event) {
+            const reader = new FileReader();
+            reader.onload = function() {
+                const output = document.getElementById('profilePreview');
+                const placeholder = document.getElementById('placeholderIcon');
+                
+                output.src = reader.result;
+                output.classList.remove('hidden');
+                placeholder.classList.add('hidden');
+            };
+            reader.readAsDataURL(event.target.files[0]);
+        }
+
+        // --- NEW: Dummy Save Logic ---
+        function saveProfile(event) {
+            event.preventDefault();
+            
+            // In a real app, you'd send this data to a database
+            const newName = document.getElementById('editName').value;
+            const newUsername = document.getElementById('editUsername').value;
+            
+            // Update the UI immediately
+            document.querySelector('h1').innerText = newName;
+            document.querySelector('p.text-coral').innerText = '@' + newUsername;
+            
+            toggleModal();
+            alert("Profile updated successfully!");
+        }
+
+        window.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                const modal = document.getElementById('editModal');
+                if (!modal.classList.contains('hidden')) toggleModal();
+            }
+        });
+    </script>
+</body>
+</html>
