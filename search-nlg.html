@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PantryPal | Search</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Outfit:wght@300;400;600&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Outfit', sans-serif; }
+        .brand-font { font-family: 'Fredoka One', cursive; }
+        .text-coral { color: #E97D5B; }
+        .bg-coral { background-color: #E97D5B; }
+        .sidebar-item:hover:not(.active) { color: #E97D5B; }
+    </style>
+</head>
+<body class="bg-gray-50 flex min-h-screen">
+
+    <aside class="w-72 bg-white border-r border-gray-100 flex flex-col p-8 fixed h-full">
+        <div class="text-3xl brand-font text-coral mb-12">PantryPal</div>
+        <nav class="space-y-6 flex-grow text-gray-500 font-semibold">
+            <a href="homepage-nlg.html" class="flex items-center gap-4 px-5 py-2 sidebar-item transition-all">
+                <i data-lucide="home"></i> Home
+            </a>
+            <a href="search-nlg.html" class="flex items-center gap-4 bg-coral text-white px-5 py-4 rounded-2xl shadow-lg shadow-orange-100">
+                <i data-lucide="search"></i> Search
+            </a>
+        </nav>
+        <div class="border-t border-gray-100 pt-8">
+            <a href="loginpage.html" class="flex items-center gap-4 px-5 py-2 text-gray-500 font-semibold sidebar-item transition-all">
+                <i data-lucide="log-out"></i> Log in
+            </a>
+        </div>
+    </aside>
+
+    <main class="ml-72 flex-grow p-12 bg-white">
+        
+        <div class="relative w-full max-w-5xl group">
+            <i data-lucide="search" class="absolute left-6 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-coral transition-colors"></i>
+            <input type="text" placeholder="Search for lasagna, pasta, or chefs..." 
+                class="w-full pl-16 pr-8 py-5 rounded-3xl border border-gray-100 bg-gray-50/50 outline-none focus:border-coral/30 focus:bg-white transition-all text-lg">
+        </div>
+
+        <div class="mt-8 p-1.5 bg-gray-50 rounded-2xl flex w-full max-w-5xl border border-gray-100">
+            <button id="recipeBtn" onclick="setTab('recipes')" class="flex-1 py-3 rounded-xl font-bold transition-all bg-white shadow-sm text-gray-900">
+                Recipes
+            </button>
+            <button id="chefBtn" onclick="setTab('chefs')" class="flex-1 py-3 rounded-xl font-bold transition-all text-gray-400 hover:text-gray-600">
+                Chefs
+            </button>
+        </div>
+
+        <div id="searchPlaceholder" class="mt-32 flex flex-col items-center justify-center text-center">
+            <p class="text-xl text-gray-400 font-medium tracking-wide">
+                Type something to start searching tasty recipes!
+            </p>
+        </div>
+
+    </main>
+
+    <script>
+        lucide.createIcons();
+
+        function setTab(type) {
+            const recipeBtn = document.getElementById('recipeBtn');
+            const chefBtn = document.getElementById('chefBtn');
+            const placeholder = document.getElementById('searchPlaceholder');
+
+            if (type === 'recipes') {
+                // Style updates
+                recipeBtn.classList.add('bg-white', 'shadow-sm', 'text-gray-900');
+                recipeBtn.classList.remove('text-gray-400');
+                chefBtn.classList.remove('bg-white', 'shadow-sm', 'text-gray-900');
+                chefBtn.classList.add('text-gray-400');
+                // Show text
+                placeholder.classList.remove('hidden');
+            } else {
+                // Style updates
+                chefBtn.classList.add('bg-white', 'shadow-sm', 'text-gray-900');
+                chefBtn.classList.remove('text-gray-400');
+                recipeBtn.classList.remove('bg-white', 'shadow-sm', 'text-gray-900');
+                recipeBtn.classList.add('text-gray-400');
+                // Hide text
+                placeholder.classList.add('hidden');
+            }
+        }
+    </script>
+</body>
+</html>
