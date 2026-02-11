@@ -1,6 +1,3 @@
-const dns = require('dns');
-dns.setServers(['8.8.8.8', '1.1.1.1']);
-
 const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
@@ -37,6 +34,10 @@ app.get('/api/leaderboard', async (req, res) => {
     res.status(500).json({ error: "Failed to fetch leaderboard" });
   }
 });
+const cors = require('cors');
 
-const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+app.use(cors({
+    origin: 'https://kian-drego.github.io/Pantry_Pal/', // Replace with your actual GitHub Pages URL
+    methods: ['GET', 'POST', 'PUT', 'DELETE'],
+    allowedHeaders: ['Content-Type', 'Authorization']
+}));
