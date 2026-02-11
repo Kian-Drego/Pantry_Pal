@@ -116,6 +116,13 @@
                 alert("Server connection failed.");
             }
         }); 
+        // In Loginpage.html script
+if (response.ok) {
+    localStorage.setItem('token', data.token);
+    localStorage.setItem('userId', data.userId); // Ensure this line exists
+    localStorage.setItem('username', data.username);
+    window.location.href = "homepage.html";
+}
     </script>
 </body>
 </html>
