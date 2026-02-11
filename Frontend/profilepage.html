@@ -166,8 +166,16 @@
         </div>
     </div>
 
-    <script>
+<script>
         lucide.createIcons();
+
+        // 1. Initial Page Load: Check for stored user data
+        window.onload = function() {
+            const username = localStorage.getItem('username');
+            if (username) {
+                document.querySelector('p.text-coral').innerText = '@' + username;
+            }
+        };
 
         function toggleModal() {
             const modal = document.getElementById('editModal');
@@ -187,26 +195,41 @@
             if(event.target.files[0]) reader.readAsDataURL(event.target.files[0]);
         }
 
-        // Integrated Save Logic
+        /**
+         * UPDATED: saveProfile 
+         * Sends profile updates to the backend and saves to the database.
+         */
         async function saveProfile(event) {
             event.preventDefault();
             
+            // Retrieve session data stored during Login
             const userId = localStorage.getItem('userId');
+            const token = localStorage.getItem('token');
+
+            if (!userId || !token) {
+                alert("Session expired. Please log in again.");
+                window.location.href = "Loginpage.html";
+                return;
+            }
+
             const newName = document.getElementById('editName').value;
             const newUsername = document.getElementById('editUsername').value;
             const newBio = document.getElementById('editBio').value;
+            const profilePic = document.getElementById('profilePreview').src || "";
 
             const profileData = {
                 username: newUsername,
-                bio: newBio
+                bio: newBio,
+                profilePic: profilePic
             };
 
             try {
+                // Relinked to your backend profile endpoint
                 const response = await fetch(`https://pantry-pal-jur7.onrender.com/api/auth/profile/${userId}`, {
                     method: 'PUT',
                     headers: {
                         'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${localStorage.getItem('token')}`
+                        'Authorization': `Bearer ${token}`
                     },
                     body: JSON.stringify(profileData)
                 });
@@ -214,18 +237,22 @@
                 const data = await response.json();
 
                 if (response.ok) {
+                    // Update the public profile view in the UI
                     document.querySelector('h1').innerText = newName;
                     document.querySelector('p.text-coral').innerText = '@' + newUsername;
                     document.querySelector('p.text-gray-500').innerText = newBio;
                     
+                    // Update local storage so the change persists across pages
+                    localStorage.setItem('username', newUsername);
+                    
                     toggleModal();
-                    alert("Profile updated and saved!");
+                    alert("Profile updated and saved to server!");
                 } else {
                     alert(data.error || "Update failed.");
                 }
             } catch (err) {
                 console.error("Save error:", err);
-                alert("Could not connect to the server.");
+                alert("Could not connect to the server. Please ensure your backend is running.");
             }
         }
 
@@ -235,52 +262,6 @@
                 if (!modal.classList.contains('hidden')) toggleModal();
             }
         });
-
-        // Inside the <script> tag of Frontend/profilepage.html
-
-async function saveProfile(event) {
-    event.preventDefault();
-    
-    // Get values from the modal inputs
-    const userId = localStorage.getItem('userId'); // Stored during login
-    const newUsername = document.getElementById('editUsername').value;
-    const newBio = document.getElementById('editBio').value;
-    // For now, using a placeholder for the image string
-    const profilePic = document.getElementById('profilePreview').src || "";
-
-    const profileData = {
-        username: newUsername,
-        bio: newBio,
-        profilePic: profilePic
-    };
-
-    try {
-        const response = await fetch(`https://pantry-pal-jur7.onrender.com/api/auth/profile/${userId}`, {
-            method: 'PUT',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${localStorage.getItem('token')}`
-            },
-            body: JSON.stringify(profileData)
-        });
-
-        const data = await response.json();
-
-        if (response.ok) {
-            // Update the UI with the new values
-            document.querySelector('p.text-coral').innerText = '@' + newUsername;
-            document.querySelector('p.text-gray-500').innerText = newBio;
-            
-            toggleModal(); // Close the modal
-            alert("Profile updated successfully!");
-        } else {
-            alert(data.error || "Update failed.");
-        }
-    } catch (err) {
-        console.error("Save error:", err);
-        alert("Could not connect to the server.");
-    }
-}
     </script>
 </body>
 </html>
