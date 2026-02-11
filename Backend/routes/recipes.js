@@ -12,13 +12,12 @@ router.get('/', async (req, res) => {
 });
 
 /**
- * FIX: Create new recipe
- * This logic ensures the 'author' field is correctly saved so it appears
- * on the user's profile and updates their recipe count.
+ * Create new recipe
+ * Ensures the 'author' field is saved so it updates the user's recipe count.
  */
 router.post('/', async (req, res) => {
   try {
-    // req.body should include: title, description, image, ingredients, instructions, and author (userId)
+    // req.body includes: title, description, image, ingredients, instructions, and author (userId)
     const newRecipe = new Recipe(req.body);
     await newRecipe.save();
     
@@ -48,6 +47,22 @@ router.get('/search', async (req, res) => {
     res.json(results);
   } catch (err) {
     res.status(500).json({ error: "Search failed" });
+  }
+});
+
+// Delete a recipe
+// This endpoint is called from the profile page to remove a user's own post
+router.delete('/:id', async (req, res) => {
+  try {
+    const deletedRecipe = await Recipe.findByIdAndDelete(req.params.id);
+    
+    if (!deletedRecipe) {
+      return res.status(404).json({ error: "Recipe not found" });
+    }
+    
+    res.json({ message: "Recipe deleted successfully" });
+  } catch (err) {
+    res.status(500).json({ error: "Could not delete recipe" });
   }
 });
 
