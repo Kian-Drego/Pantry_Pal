@@ -80,38 +80,31 @@
     <div class="fixed bottom-0 right-0 -z-10 w-96 h-96 bg-coral opacity-[0.03] rounded-full translate-x-1/3 translate-y-1/3"></div>
 
     <script>
-        // Initialize Lucide icons
-        lucide.createIcons();
+        // Inside your <script> tag in Loginpage.html
+async function handleLogin(event) {
+    event.preventDefault();
+    
+    const email = document.getElementById('email').value;
+    const password = document.getElementById('password').value;
 
-        const loginForm = document.getElementById('loginForm');
-        const modal = document.getElementById('featureModal');
+    const response = await fetch('http://localhost:5000/api/auth/login', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ email, password })
+    });
 
-        // Modal Functions
-        function showPopup() {
-            modal.classList.remove('hidden');
-        }
+    const data = await response.json();
 
-        function closePopup() {
-            modal.classList.add('hidden');
-        }
-
-        // Form Submission Logic
-        loginForm.addEventListener('submit', function(e) {
-            e.preventDefault(); 
-            const email = document.getElementById('loginEmail').value;
-            const password = document.getElementById('loginPassword').value;
-
-            if (email && password.length >= 8) {
-                window.location.href = "homepage.html";
-            } else {
-                alert("Please enter a valid email and a password of at least 8 characters.");
-            }
-        });
-
-        // Close modal on Escape key
-        window.addEventListener('keydown', (e) => {
-            if (e.key === 'Escape') closePopup();
-        });
+    if (response.ok) {
+        // Save the token so the user stays logged in
+        localStorage.setItem('token', data.token);
+        window.location.href = 'homepage.html'; // Redirect to home
+    } else {
+        alert(data.error); // Show error from backend
+    }
+}
     </script>
 </body>
 </html>
