@@ -12,101 +12,122 @@
         .brand-font { font-family: 'Fredoka One', cursive; }
         .text-coral { color: #E97D5B; }
         .bg-coral { background-color: #E97D5B; }
-        
-        /* Smooth scrolling */
-        .custom-scroll::-webkit-scrollbar { width: 6px; }
-        .custom-scroll::-webkit-scrollbar-track { background: transparent; }
-        .custom-scroll::-webkit-scrollbar-thumb { background: #eee; border-radius: 10px; }
-
-        /* Prevents iOS zoom on focus */
-        @media screen and (max-width: 768px) {
-            input, textarea { font-size: 16px !important; }
-        }
     </style>
 </head>
 <body class="bg-gray-50 flex flex-col md:flex-row min-h-screen">
 
-    <aside class="hidden md:flex w-72 bg-white border-r border-gray-100 flex-col p-8 fixed h-full flex-shrink-0 z-10">
+    <aside class="hidden md:flex w-72 bg-white border-r border-gray-100 flex-col p-8 fixed h-full z-10">
         <div class="text-3xl brand-font text-coral mb-12">PantryPal</div>
         <nav class="space-y-6 flex-grow text-gray-500 font-semibold">
             <a href="homepage.html" class="flex items-center gap-4 px-5 py-2 hover:text-coral transition-all"><i data-lucide="home"></i> Home</a>
             <a href="search.html" class="flex items-center gap-4 px-5 py-2 hover:text-coral transition-all"><i data-lucide="search"></i> Search</a>
             <a href="create.html" class="flex items-center gap-4 bg-coral text-white px-5 py-4 rounded-2xl shadow-lg shadow-orange-100"><i data-lucide="plus-square"></i> Create</a>
-            <a href="leaderboard.html" class="flex items-center gap-4 px-5 py-2 hover:text-coral transition-all"><i data-lucide="trophy"></i> Leaderboard</a>
-            <a href="analytics.html" class="flex items-center gap-4 px-5 py-2 hover:text-coral transition-all"><i data-lucide="bar-chart-2"></i> Analytics</a>
             <a href="profilepage.html" class="flex items-center gap-4 px-5 py-2 hover:text-coral transition-all"><i data-lucide="user"></i> Profile</a>
         </nav>
-        <div class="border-t border-gray-100 pt-8">
-            <a href="../index.html" class="flex items-center gap-4 px-5 py-2 text-gray-500 font-semibold hover:text-red-500 transition-all"><i data-lucide="log-out"></i> Log out</a>
-        </div>
     </aside>
 
-    <nav class="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-100 flex justify-around items-center p-4 z-50">
-        <a href="homepage.html" class="text-gray-400"><i data-lucide="home"></i></a>
-        <a href="search.html" class="text-gray-400"><i data-lucide="search"></i></a>
-        <a href="create.html" class="text-coral"><i data-lucide="plus-square"></i></a>
-        <a href="leaderboard.html" class="text-gray-400"><i data-lucide="trophy"></i></a>
-        <a href="profilepage.html" class="text-gray-400"><i data-lucide="user"></i></a>
-    </nav>
-
     <main class="flex-grow p-6 md:p-12 md:ml-72 bg-white min-h-screen pb-24 md:pb-12">
-        
         <header class="mb-8 md:mb-10">
             <h1 class="text-4xl md:text-5xl brand-font text-coral mb-2">Share Recipe</h1>
             <p class="text-gray-500 text-base md:text-lg">Share your culinary secrets with the world.</p>
         </header>
 
-        <form class="max-w-4xl space-y-6 md:space-y-8">
-            
-            <div class="bg-white rounded-[2rem] md:rounded-3xl border border-gray-100 p-6 md:p-8 shadow-sm">
-                <h2 class="text-xl md:text-2xl font-bold text-gray-900">Basic Info</h2>
-                <p class="text-gray-400 mb-6 text-sm md:text-base">Start with the appetizing details.</p>
-                
+        <form id="recipeForm" class="max-w-4xl space-y-6 md:space-y-8">
+            <div class="bg-white rounded-[2rem] border border-gray-100 p-6 md:p-8 shadow-sm">
+                <h2 class="text-xl md:text-2xl font-bold text-gray-900 mb-6">Basic Info</h2>
                 <div class="space-y-5">
                     <div>
                         <label class="block text-sm font-bold text-gray-700 mb-2 ml-1">Recipe Title</label>
-                        <input type="text" placeholder="e.g. Grandma's Lasagna" class="w-full p-4 bg-gray-50 border border-gray-100 rounded-xl focus:outline-none focus:ring-2 focus:ring-coral/20 appearance-none">
+                        <input type="text" id="title" placeholder="e.g. Grandma's Lasagna" class="w-full p-4 bg-gray-50 border border-gray-100 rounded-xl focus:ring-2 focus:ring-coral/20 outline-none" required>
                     </div>
                     <div>
                         <label class="block text-sm font-bold text-gray-700 mb-2 ml-1">Description</label>
-                        <textarea rows="4" placeholder="Tell us the story behind this dish..." class="w-full p-4 bg-gray-50 border border-gray-100 rounded-xl focus:outline-none focus:ring-2 focus:ring-coral/20 resize-none appearance-none"></textarea>
+                        <textarea id="description" rows="3" placeholder="Tell us the story behind this dish..." class="w-full p-4 bg-gray-50 border border-gray-100 rounded-xl focus:ring-2 focus:ring-coral/20 outline-none resize-none" required></textarea>
                     </div>
                     <div>
                         <label class="block text-sm font-bold text-gray-700 mb-2 ml-1">Image URL</label>
-                        <input type="text" placeholder="https://..." class="w-full p-4 bg-gray-50 border border-gray-100 rounded-xl focus:outline-none focus:ring-2 focus:ring-coral/20 appearance-none">
+                        <input type="url" id="imageUrl" placeholder="https://..." class="w-full p-4 bg-gray-50 border border-gray-100 rounded-xl focus:ring-2 focus:ring-coral/20 outline-none">
                     </div>
                 </div>
             </div>
 
-            <div class="bg-white rounded-[2rem] md:rounded-3xl border border-gray-100 p-6 md:p-8 shadow-sm text-center md:text-left">
-                <h2 class="text-xl md:text-2xl font-bold text-gray-900">Ingredients</h2>
-                <p class="text-gray-400 mb-6 text-sm md:text-base">What goes into the pot?</p>
-                
-                <button type="button" class="w-full md:w-auto flex items-center justify-center gap-2 px-6 py-4 border-2 border-gray-100 rounded-xl font-bold text-gray-700 hover:bg-gray-50 transition-all touch-manipulation">
+            <div class="bg-white rounded-[2rem] border border-gray-100 p-6 md:p-8 shadow-sm">
+                <h2 class="text-xl md:text-2xl font-bold text-gray-900 mb-2">Ingredients</h2>
+                <div id="ingredientsList" class="space-y-3 mb-6">
+                    <input type="text" placeholder="1 cup Flour" class="ingredient-input w-full p-4 bg-gray-50 border border-gray-100 rounded-xl outline-none" required>
+                </div>
+                <button type="button" onclick="addItem('ingredientsList', 'ingredient-input')" class="flex items-center gap-2 font-bold text-coral hover:underline">
                     <i data-lucide="plus" class="w-5 h-5"></i> Add Ingredient
                 </button>
             </div>
 
-            <div class="bg-white rounded-[2rem] md:rounded-3xl border border-gray-100 p-6 md:p-8 shadow-sm text-center md:text-left">
-                <h2 class="text-xl md:text-2xl font-bold text-gray-900">Instructions</h2>
-                <p class="text-gray-400 mb-6 text-sm md:text-base">Step-by-step guide to perfection.</p>
-                
-                <button type="button" class="w-full md:w-auto flex items-center justify-center gap-2 px-6 py-4 border-2 border-gray-100 rounded-xl font-bold text-gray-700 hover:bg-gray-50 transition-all touch-manipulation">
+            <div class="bg-white rounded-[2rem] border border-gray-100 p-6 md:p-8 shadow-sm">
+                <h2 class="text-xl md:text-2xl font-bold text-gray-900 mb-2">Instructions</h2>
+                <div id="stepsList" class="space-y-3 mb-6">
+                    <textarea rows="2" placeholder="Step 1: Preheat oven..." class="step-input w-full p-4 bg-gray-50 border border-gray-100 rounded-xl outline-none resize-none" required></textarea>
+                </div>
+                <button type="button" onclick="addItem('stepsList', 'step-input', true)" class="flex items-center gap-2 font-bold text-coral hover:underline">
                     <i data-lucide="plus" class="w-5 h-5"></i> Add Step
                 </button>
             </div>
 
-            <div class="pt-4 flex justify-center md:justify-end">
-                <button type="submit" class="w-full md:w-auto bg-coral text-white font-bold px-12 py-5 rounded-2xl shadow-lg shadow-orange-100 hover:scale-[1.02] active:scale-[0.98] transition-all touch-manipulation">
-                    Share Recipe
-                </button>
-            </div>
-
+            <button type="submit" class="w-full md:w-auto bg-coral text-white font-bold px-12 py-5 rounded-2xl shadow-lg hover:scale-[1.02] active:scale-[0.98] transition-all">
+                Share Recipe
+            </button>
         </form>
     </main>
 
     <script>
         lucide.createIcons();
+
+        // Dynamically add more inputs for ingredients or steps
+        function addItem(containerId, className, isTextArea = false) {
+            const container = document.getElementById(containerId);
+            const input = document.createElement(isTextArea ? 'textarea' : 'input');
+            input.className = `${className} w-full p-4 bg-gray-50 border border-gray-100 rounded-xl outline-none mt-3`;
+            if (isTextArea) input.rows = 2;
+            input.placeholder = isTextArea ? "Next step..." : "Next ingredient...";
+            container.appendChild(input);
+        }
+
+        // Handle Form Submission
+        document.getElementById('recipeForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            // Collect all ingredients and steps into arrays
+            const ingredients = Array.from(document.querySelectorAll('.ingredient-input')).map(i => i.value).filter(v => v);
+            const instructions = Array.from(document.querySelectorAll('.step-input')).map(i => i.value).filter(v => v);
+            
+            const recipeData = {
+                title: document.getElementById('title').value,
+                description: document.getElementById('description').value,
+                image: document.getElementById('imageUrl').value,
+                ingredients: ingredients,
+                instructions: instructions,
+                author: localStorage.getItem('userId') // Linking to the logged-in user
+            };
+
+            try {
+                const response = await fetch('https://pantry-pal-jur7.onrender.com/api/recipes', {
+                    method: 'POST',
+                    headers: { 
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${localStorage.getItem('token')}` 
+                    },
+                    body: JSON.stringify(recipeData)
+                });
+
+                if (response.ok) {
+                    alert('Recipe shared successfully!');
+                    window.location.href = 'homepage.html';
+                } else {
+                    alert('Failed to share recipe. Please try again.');
+                }
+            } catch (err) {
+                console.error(err);
+                alert('Server connection error.');
+            }
+        });
     </script>
 </body>
 </html>
