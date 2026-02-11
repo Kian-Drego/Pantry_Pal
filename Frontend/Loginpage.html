@@ -81,30 +81,31 @@
 
     <script>
         // Inside your <script> tag in Loginpage.html
-async function handleLogin(event) {
-    event.preventDefault();
-    
-    const email = document.getElementById('email').value;
-    const password = document.getElementById('password').value;
+loginForm.addEventListener('submit', async function(e) {
+    e.preventDefault();
+    const email = document.getElementById('loginEmail').value;
+    const password = document.getElementById('loginPassword').value;
 
-    const response = await fetch('http://localhost:5000/api/auth/login', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ email, password })
-    });
+    try {
+        const response = await fetch('http://localhost:5000/api/auth/login', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email, password })
+        });
 
-    const data = await response.json();
-
-    if (response.ok) {
-        // Save the token so the user stays logged in
-        localStorage.setItem('token', data.token);
-        window.location.href = 'homepage.html'; // Redirect to home
-    } else {
-        alert(data.error); // Show error from backend
+        const data = await response.json();
+        if (response.ok) {
+            // Store the token and username for personalized features
+            localStorage.setItem('token', data.token);
+            localStorage.setItem('username', data.username);
+            window.location.href = "homepage.html";
+        } else {
+            alert(data.error || "Login failed.");
+        }
+    } catch (err) {
+        alert("Server connection failed.");
     }
-}
-    </script>
+});    
+</script>
 </body>
 </html>

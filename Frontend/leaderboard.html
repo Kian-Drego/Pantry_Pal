@@ -62,7 +62,25 @@
     </main>
 
     <script>
-        // Initialize Lucide Icons
+async function fetchLeaderboard() {
+    try {
+        const response = await fetch('http://localhost:5000/api/leaderboard');
+        const users = await response.json();
+        
+        const container = document.querySelector('main div');
+        if (users.length > 0) {
+            container.innerHTML = users.map((user, index) => `
+                <div class="flex items-center justify-between w-full p-4 border-b">
+                    <span>${index + 1}. ${user.username}</span>
+                    <span class="font-bold text-coral">${user.points} pts</span>
+                </div>
+            `).join('');
+        }
+    } catch (err) {
+        console.error("Error fetching leaderboard:", err);
+    }
+}
+window.onload = fetchLeaderboard;
         lucide.createIcons();
     </script>
 </body>
