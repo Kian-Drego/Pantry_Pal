@@ -90,7 +90,7 @@
         function closePopup() { document.getElementById('featureModal').classList.add('hidden'); }
         lucide.createIcons();
 
-        // Your original Script (Unchanged)
+        // Login Logic
         const loginForm = document.getElementById('loginForm');
         loginForm.addEventListener('submit', async function(e) {
             e.preventDefault();
@@ -105,24 +105,23 @@
                 });
 
                 const data = await response.json();
+                
                 if (response.ok) {
+                    // Store all necessary session details
                     localStorage.setItem('token', data.token);
+                    localStorage.setItem('userId', data.userId); 
                     localStorage.setItem('username', data.username);
+                    
+                    // Redirect to homepage
                     window.location.href = "homepage.html";
                 } else {
                     alert(data.error || "Login failed.");
                 }
             } catch (err) {
-                alert("Server connection failed.");
+                console.error("Login Error:", err);
+                alert("Server connection failed. Please try again later.");
             }
         }); 
-        // In Loginpage.html script
-if (response.ok) {
-    localStorage.setItem('token', data.token);
-    localStorage.setItem('userId', data.userId); // Ensure this line exists
-    localStorage.setItem('username', data.username);
-    window.location.href = "homepage.html";
-}
     </script>
 </body>
 </html>
