@@ -196,6 +196,49 @@
                 if (!modal.classList.contains('hidden')) toggleModal();
             }
         });
+        // Inside the <script> tag of profilepage.html
+
+async function saveProfile(event) {
+    event.preventDefault();
+    
+    const userId = localStorage.getItem('userId'); // Ensure this was saved during login
+    const newName = document.getElementById('editName').value;
+    const newUsername = document.getElementById('editUsername').value;
+    const newBio = document.getElementById('editBio').value;
+
+    const profileData = {
+        username: newUsername,
+        bio: newBio
+    };
+
+    try {
+        const response = await fetch(`https://pantry-pal-jur7.onrender.com/api/auth/profile/${userId}`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${localStorage.getItem('token')}` // For security
+            },
+            body: JSON.stringify(profileData)
+        });
+
+        const data = await response.json();
+
+        if (response.ok) {
+            // Update UI immediately
+            document.querySelector('h1').innerText = newName;
+            document.querySelector('p.text-coral').innerText = '@' + newUsername;
+            document.querySelector('p.text-gray-500').innerText = newBio;
+            
+            toggleModal();
+            alert("Profile updated and saved to database!");
+        } else {
+            alert(data.error || "Update failed.");
+        }
+    } catch (err) {
+        console.error("Save error:", err);
+        alert("Could not connect to the server.");
+    }
+}
     </script>
 </body>
 </html>
