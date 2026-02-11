@@ -56,3 +56,27 @@ router.put('/profile/:id', async (req, res) => {
     res.status(500).json({ error: "Failed to update profile" });
   }
 });
+
+// Backend/routes/auth.js
+
+// Add this to your existing routes
+router.put('/profile/:id', async (req, res) => {
+  try {
+    const { username, bio, profilePic } = req.body;
+    
+    // Find user by ID and update their information
+    const updatedUser = await User.findByIdAndUpdate(
+      req.params.id,
+      { username, bio, profilePic },
+      { new: true } // Returns the updated document instead of the old one
+    );
+
+    if (!updatedUser) {
+      return res.status(404).json({ error: "User not found" });
+    }
+
+    res.json({ message: "Profile updated successfully", user: updatedUser });
+  } catch (err) {
+    res.status(500).json({ error: "Failed to update profile" });
+  }
+});

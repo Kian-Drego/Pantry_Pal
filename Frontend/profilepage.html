@@ -235,6 +235,52 @@
                 if (!modal.classList.contains('hidden')) toggleModal();
             }
         });
+
+        // Inside the <script> tag of Frontend/profilepage.html
+
+async function saveProfile(event) {
+    event.preventDefault();
+    
+    // Get values from the modal inputs
+    const userId = localStorage.getItem('userId'); // Stored during login
+    const newUsername = document.getElementById('editUsername').value;
+    const newBio = document.getElementById('editBio').value;
+    // For now, using a placeholder for the image string
+    const profilePic = document.getElementById('profilePreview').src || "";
+
+    const profileData = {
+        username: newUsername,
+        bio: newBio,
+        profilePic: profilePic
+    };
+
+    try {
+        const response = await fetch(`https://pantry-pal-jur7.onrender.com/api/auth/profile/${userId}`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${localStorage.getItem('token')}`
+            },
+            body: JSON.stringify(profileData)
+        });
+
+        const data = await response.json();
+
+        if (response.ok) {
+            // Update the UI with the new values
+            document.querySelector('p.text-coral').innerText = '@' + newUsername;
+            document.querySelector('p.text-gray-500').innerText = newBio;
+            
+            toggleModal(); // Close the modal
+            alert("Profile updated successfully!");
+        } else {
+            alert(data.error || "Update failed.");
+        }
+    } catch (err) {
+        console.error("Save error:", err);
+        alert("Could not connect to the server.");
+    }
+}
     </script>
 </body>
 </html>
