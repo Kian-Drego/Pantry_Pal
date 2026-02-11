@@ -64,7 +64,7 @@
     <script>
 async function fetchLeaderboard() {
     try {
-        const response = await fetch('http://localhost:5000/api/leaderboard');
+        const response = await fetch('https://pantry-pal-jur7.onrender.com/api/leaderboard');
         const users = await response.json();
         
         const container = document.querySelector('main div');
