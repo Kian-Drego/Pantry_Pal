@@ -24,7 +24,6 @@ router.post('/login', async (req, res) => {
     const user = await User.findOne({ email: req.body.email });
     if (user && await bcrypt.compare(req.body.password, user.password)) {
       const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET || 'secret');
-      // Returns userId and username for frontend localStorage
       res.json({ token, userId: user._id, username: user.username });
     } else {
       res.status(401).json({ error: "Invalid email or password" });
@@ -34,12 +33,41 @@ router.post('/login', async (req, res) => {
   }
 });
 
-// Update Profile Route
+/**
+ * FIX 1: GET Profile Route
+ * This allows the frontend to fetch current data when the page is refreshed.
+ */
+router.get('/profile/:id', async (req, res) => {
+  try {
+    const user = await User.findById(req.params.id).select('-password');
+    if (!user) return res.status(404).json({ error: "User not found" });
+
+    // Dynamic counts from the database
+    const recipeCount = await Recipe.countDocuments({ author: req.params.id });
+    
+    // Followers/Following arrays from your User model
+    const followerCount = user.followers ? user.followers.length : 0;
+    const followingCount = user.following ? user.following.length : 0;
+
+    res.json({ 
+      user, 
+      recipeCount, 
+      followerCount, 
+      followingCount 
+    });
+  } catch (err) {
+    res.status(500).json({ error: "Could not fetch profile" });
+  }
+});
+
+/**
+ * FIX 2: Enhanced Update Profile Route
+ * Now returns updated follower/following counts so the UI stays in sync.
+ */
 router.put('/profile/:id', async (req, res) => {
   try {
     const { username, bio, profilePic } = req.body;
     
-    // 1. Update the user information in the User collection
     const updatedUser = await User.findByIdAndUpdate(
       req.params.id,
       { username, bio, profilePic },
@@ -50,15 +78,16 @@ router.put('/profile/:id', async (req, res) => {
       return res.status(404).json({ error: "User not found" });
     }
 
-    // 2. Count the number of recipes created by this specific user
-    // Assumes the Recipe model uses 'author' to link to user IDs
     const recipeCount = await Recipe.countDocuments({ author: req.params.id });
+    const followerCount = updatedUser.followers ? updatedUser.followers.length : 0;
+    const followingCount = updatedUser.following ? updatedUser.following.length : 0;
 
-    // 3. Return the updated user and the dynamic recipe count to the frontend
     res.json({ 
       message: "Profile updated successfully", 
       user: updatedUser,
-      recipeCount: recipeCount 
+      recipeCount,
+      followerCount,
+      followingCount
     });
   } catch (err) {
     console.error(err);
