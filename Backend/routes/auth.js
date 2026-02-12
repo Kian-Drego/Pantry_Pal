@@ -34,18 +34,14 @@ router.post('/login', async (req, res) => {
 });
 
 /**
- * FIX 1: GET Profile Route
- * This allows the frontend to fetch current data when the page is refreshed.
+ * GET Profile Route
  */
 router.get('/profile/:id', async (req, res) => {
   try {
     const user = await User.findById(req.params.id).select('-password');
     if (!user) return res.status(404).json({ error: "User not found" });
 
-    // Dynamic counts from the database
     const recipeCount = await Recipe.countDocuments({ author: req.params.id });
-    
-    // Followers/Following arrays from your User model
     const followerCount = user.followers ? user.followers.length : 0;
     const followingCount = user.following ? user.following.length : 0;
 
@@ -61,8 +57,7 @@ router.get('/profile/:id', async (req, res) => {
 });
 
 /**
- * FIX 2: Enhanced Update Profile Route
- * Now returns updated follower/following counts so the UI stays in sync.
+ * Update Profile Route
  */
 router.put('/profile/:id', async (req, res) => {
   try {
@@ -74,9 +69,7 @@ router.put('/profile/:id', async (req, res) => {
       { new: true } 
     );
 
-    if (!updatedUser) {
-      return res.status(404).json({ error: "User not found" });
-    }
+    if (!updatedUser) return res.status(404).json({ error: "User not found" });
 
     const recipeCount = await Recipe.countDocuments({ author: req.params.id });
     const followerCount = updatedUser.followers ? updatedUser.followers.length : 0;
@@ -90,8 +83,50 @@ router.put('/profile/:id', async (req, res) => {
       followingCount
     });
   } catch (err) {
-    console.error(err);
     res.status(500).json({ error: "Failed to update profile" });
+  }
+});
+
+/**
+ * NEW: Follow/Unfollow Toggle Route
+ */
+router.post('/follow/:id', async (req, res) => {
+  try {
+    const targetUserId = req.params.id; // Person to be followed
+    const currentUserId = req.body.currentUserId; // The person logged in
+
+    if (targetUserId === currentUserId) {
+      return res.status(400).json({ error: "You cannot follow yourself" });
+    }
+
+    const targetUser = await User.findById(targetUserId);
+    const currentUser = await User.findById(currentUserId);
+
+    if (!targetUser || !currentUser) {
+      return res.status(404).json({ error: "User not found" });
+    }
+
+    // Check if the current user is already in the target user's followers list
+    const isFollowing = targetUser.followers.includes(currentUserId);
+
+    if (isFollowing) {
+      // Unfollow Logic
+      targetUser.followers.pull(currentUserId);
+      currentUser.following.pull(targetUserId);
+      await targetUser.save();
+      await currentUser.save();
+      res.json({ message: "Unfollowed successfully", isFollowing: false });
+    } else {
+      // Follow Logic
+      targetUser.followers.push(currentUserId);
+      currentUser.following.push(targetUserId);
+      await targetUser.save();
+      await currentUser.save();
+      res.json({ message: "Followed successfully", isFollowing: true });
+    }
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Follow action failed" });
   }
 });
 
