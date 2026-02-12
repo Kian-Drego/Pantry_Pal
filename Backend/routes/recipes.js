@@ -1,12 +1,18 @@
 const router = require('express').Router();
 const Recipe = require('../models/Recipe');
 
-// 1. Get all recipes
-// Added 'likedBy' to populate to ensure feed icons stay in sync
+/**
+ * 1. Get all recipes for Homepage Feed
+ * Populates author details (including followers for the 'Follow' button logic)
+ * and likedBy IDs (for the 'Heart' icon state).
+ */
 router.get('/', async (req, res) => {
   try {
     const recipes = await Recipe.find()
-      .populate('author', 'username followers')
+      .populate({
+        path: 'author',
+        select: 'username followers profilePic'
+      })
       .populate('likedBy', '_id'); 
     res.json(recipes);
   } catch (err) {
@@ -14,7 +20,9 @@ router.get('/', async (req, res) => {
   }
 });
 
-// 2. Create new recipe
+/**
+ * 2. Create new recipe
+ */
 router.post('/', async (req, res) => {
   try {
     const newRecipe = new Recipe(req.body);
@@ -25,24 +33,26 @@ router.post('/', async (req, res) => {
     });
   } catch (err) {
     console.error("Recipe Post Error:", err);
-    res.status(400).json({ error: "Could not post recipe." });
+    res.status(400).json({ error: "Could not post recipe. Ensure all fields are filled." });
   }
 });
 
 /**
- * 3. FIXED: Toggle Like Route
- * Uses .toString() to avoid type-mismatch bugs between Mongoose and Frontend
+ * 3. Toggle Like Logic
+ * Uses .toString() to ensure the comparison between Frontend strings 
+ * and Mongoose ObjectIds works perfectly.
  */
 router.post('/like/:id', async (req, res) => {
   try {
     const { userId } = req.body;
-    const recipe = await Recipe.findById(req.params.id);
+    if (!userId) return res.status(400).json({ error: "User ID required" });
 
+    const recipe = await Recipe.findById(req.params.id);
     if (!recipe) return res.status(404).json({ error: "Recipe not found" });
 
     if (!recipe.likedBy) recipe.likedBy = [];
 
-    // FIX: Check existence using string comparison
+    // Check if user already liked the recipe
     const alreadyLiked = recipe.likedBy.some(id => id.toString() === userId);
 
     if (!alreadyLiked) {
@@ -67,7 +77,9 @@ router.post('/like/:id', async (req, res) => {
   }
 });
 
-// 4. Search recipes
+/**
+ * 4. Search recipes
+ */
 router.get('/search', async (req, res) => {
   try {
     const { q } = req.query;
@@ -78,7 +90,7 @@ router.get('/search', async (req, res) => {
         { title: new RegExp(q, 'i') }, 
         { ingredients: new RegExp(q, 'i') }
       ]
-    }).populate('author', 'username followers');
+    }).populate('author', 'username followers profilePic');
     
     res.json(results);
   } catch (err) {
@@ -86,7 +98,9 @@ router.get('/search', async (req, res) => {
   }
 });
 
-// 5. Delete a recipe
+/**
+ * 5. Delete a recipe
+ */
 router.delete('/:id', async (req, res) => {
   try {
     const deletedRecipe = await Recipe.findByIdAndDelete(req.params.id);
@@ -98,17 +112,3 @@ router.delete('/:id', async (req, res) => {
 });
 
 module.exports = router;
-
-router.get('/', async (req, res) => {
-  try {
-    // Crucial: We must populate the followers list of the author
-    const recipes = await Recipe.find()
-      .populate({
-        path: 'author',
-        select: 'username followers profilePic'
-      });
-    res.json(recipes);
-  } catch (err) {
-    res.status(500).json({ error: "Could not fetch recipes" });
-  }
-});
