@@ -39,7 +39,7 @@
     <main class="flex-grow p-6 md:p-12 md:ml-72 bg-white pb-24 md:pb-12">
         <header class="mb-8 md:mb-10">
             <h1 class="text-4xl md:text-5xl brand-font text-coral mb-2">Your Insights</h1>
-            <p class="text-gray-500 text-base md:text-lg">Visualizing your growth as a chef.</p>
+            <p class="text-gray-500 text-base md:text-lg">Visualizing your recipe performance metrics.</p>
         </header>
 
         <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 mb-8">
@@ -67,14 +67,14 @@
 
         <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
             <div class="lg:col-span-8 bg-white border border-gray-100 rounded-[2.5rem] p-8 shadow-sm h-[400px]">
-                <h3 class="text-xl font-bold text-gray-900 mb-4">Engagement Trends</h3>
+                <h3 class="text-xl font-bold text-gray-900 mb-4">Engagement Distribution</h3>
                 <canvas id="engagementChart"></canvas>
             </div>
 
             <div class="lg:col-span-4 bg-coral rounded-[2.5rem] p-8 text-white flex flex-col justify-center shadow-lg relative overflow-hidden">
                 <h3 class="text-2xl font-bold mb-4">Chef Pro-Tip</h3>
                 <p class="text-lg opacity-90 leading-relaxed z-10">
-                    Your <span class="font-bold">Engagement Trends</span> help you see which months your recipes perform best. Consistent posting keeps the line moving up!
+                    Your <span class="font-bold">Engagement Distribution</span> shows which interaction types are most common. Usually, a high save-to-like ratio means your recipes are highly practical!
                 </p>
                 <div class="absolute -bottom-6 -right-6 w-32 h-32 bg-white/10 rounded-full"></div>
             </div>
@@ -82,7 +82,6 @@
     </main>
 
     <script>
-        // 1. Auth Guard
         if (!localStorage.getItem('token')) window.location.href = '../index.html';
 
         let engagementChart;
@@ -102,15 +101,12 @@
                     comments: myRecipes.reduce((sum, r) => sum + (r.comments?.length || 0), 0)
                 };
 
-                // Update UI counters
                 document.getElementById('statRecipes').innerText = stats.recipes;
                 document.getElementById('statLikes').innerText = stats.likes;
                 document.getElementById('statSaves').innerText = stats.saves;
                 document.getElementById('statComments').innerText = stats.comments;
 
-                // Create the Line Graph
                 initChart(stats);
-
             } catch (err) {
                 console.error("Analytics Error:", err);
             }
@@ -119,23 +115,25 @@
         function initChart(data) {
             const ctx = document.getElementById('engagementChart').getContext('2d');
             
-            // If chart exists, destroy it before re-creating
             if (engagementChart) engagementChart.destroy();
 
             engagementChart = new Chart(ctx, {
-                type: 'line',
+                type: 'bar', // Changed from 'line' to 'bar'
                 data: {
                     labels: ['Recipes', 'Likes', 'Saves', 'Comments'],
                     datasets: [{
                         label: 'Performance Metrics',
                         data: [data.recipes, data.likes, data.saves, data.comments],
+                        backgroundColor: [
+                            'rgba(233, 125, 91, 0.2)', // Recipes
+                            'rgba(233, 125, 91, 0.5)', // Likes
+                            'rgba(233, 125, 91, 0.7)', // Saves
+                            'rgba(233, 125, 91, 1)'    // Comments
+                        ],
                         borderColor: '#E97D5B',
-                        backgroundColor: 'rgba(233, 125, 91, 0.1)',
-                        borderWidth: 4,
-                        pointBackgroundColor: '#E97D5B',
-                        pointRadius: 6,
-                        tension: 0.4, // This creates the smooth curve
-                        fill: true
+                        borderWidth: 2,
+                        borderRadius: 12, // Rounded corners for a modern look
+                        borderSkipped: false,
                     }]
                 },
                 options: {
@@ -147,7 +145,7 @@
                     scales: {
                         y: {
                             beginAtZero: true,
-                            grid: { display: false },
+                            grid: { color: '#f3f4f6' },
                             ticks: { font: { family: 'Outfit', weight: 'bold' } }
                         },
                         x: {
