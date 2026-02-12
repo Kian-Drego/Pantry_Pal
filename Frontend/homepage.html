@@ -66,16 +66,21 @@
                 <div class="flex justify-between items-start mb-4">
                     <h2 id="modalTitle" class="text-3xl brand-font text-gray-900"></h2>
                     <div class="flex gap-2">
-                        <button id="modalLikeBtn" class="flex items-center gap-2 px-4 py-2 rounded-2xl font-bold border-2 transition-all">
+                        <button id="modalLikeBtn" onclick="toggleLike(activeRecipeId)" class="flex items-center gap-2 px-4 py-2 rounded-2xl font-bold border-2 transition-all">
                             <i data-lucide="thumbs-up" id="modalLikeIcon" class="w-5 h-5"></i>
                             <span id="modalLikeCount">0</span>
                         </button>
-                        <button id="modalSaveBtn" class="flex items-center gap-2 px-4 py-2 rounded-2xl font-bold border-2 border-gray-100 text-gray-400 hover:border-blue-200 transition-all">
+                        <button id="modalSaveBtn" onclick="toggleSave(activeRecipeId)" class="flex items-center gap-2 px-4 py-2 rounded-2xl font-bold border-2 border-gray-100 text-gray-400 hover:border-blue-200 transition-all">
                             <i data-lucide="bookmark" id="modalSaveIcon" class="w-5 h-5"></i>
                         </button>
                     </div>
                 </div>
-                <p id="modalAuthor" class="text-coral font-bold mb-6"></p>
+                
+                <div class="flex items-center gap-4 mb-6">
+                    <p id="modalAuthor" class="text-coral font-bold"></p>
+                    <div id="followBtnPlaceholder"></div>
+                </div>
+
                 <p id="modalDescription" class="text-gray-500 mb-8"></p>
                 
                 <div class="grid md:grid-cols-2 gap-8 mb-10">
@@ -87,9 +92,7 @@
                     <h3 class="font-bold text-gray-900 mb-4 flex items-center gap-2">
                         <i data-lucide="message-circle" class="w-5 h-5 text-coral"></i> Discussion
                     </h3>
-                    <div id="commentsContainer" class="space-y-4 mb-6">
-                        <p class="text-gray-400 text-sm italic">No comments yet. Start the conversation!</p>
-                    </div>
+                    <div id="commentsContainer" class="space-y-4 mb-6"></div>
                     <div class="flex gap-3">
                         <input type="text" id="commentInput" placeholder="Add a comment..." class="flex-grow p-4 bg-gray-50 border border-gray-100 rounded-xl outline-none focus:ring-2 focus:ring-coral/20">
                         <button onclick="postComment()" class="bg-coral text-white p-4 rounded-xl font-bold">Post</button>
@@ -98,6 +101,7 @@
             </div>
         </div>
     </div>
+
 <script>
     let allRecipes = [];
     let activeRecipeId = null;
@@ -117,9 +121,7 @@
                 if(statusDiv) statusDiv.remove();
                 renderFeed(allRecipes);
             }
-        } catch (err) {
-            console.error(err);
-        }
+        } catch (err) { console.error(err); }
     }
 
     function renderFeed(recipes) {
@@ -160,12 +162,12 @@
         document.getElementById('modalIngredients').innerHTML = (recipe.ingredients || []).map(i => `<li>${i}</li>`).join('');
         document.getElementById('modalInstructions').innerHTML = (recipe.instructions || []).map(s => `<li>${s}</li>`).join('');
         
-        // Update Likes/Saves UI
-        const isLiked = recipe.likedBy?.some(id => (id._id || id).toString() === currentUserId);
+        // Sync Buttons
+        updateLikeUI(recipe.likedBy?.some(id => (id._id || id).toString() === currentUserId));
+        updateSaveUI(recipe.saves?.some(id => (id._id || id).toString() === currentUserId));
+        updateFollowButton(recipe.author);
         document.getElementById('modalLikeCount').innerText = recipe.likes || 0;
-        updateLikeUI(isLiked);
 
-        // Load existing comments from database
         renderComments(recipe.comments || []);
 
         document.getElementById('recipeModal').classList.remove('hidden');
@@ -173,58 +175,70 @@
         lucide.createIcons();
     }
 
-    /**
-     * POST COMMENT TO DATABASE
-     */
-    async function postComment() {
-        const input = document.getElementById('commentInput');
-        const text = input.value.trim();
-        const username = localStorage.getItem('username') || 'Chef';
-
-        if (!text || !activeRecipeId) return;
-
-        try {
-            const res = await fetch(`https://pantry-pal-jur7.onrender.com/api/recipes/comment/${activeRecipeId}`, {
-                method: 'POST',
-                headers: { 
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}` 
-                },
-                body: JSON.stringify({ userId: currentUserId, username, text })
-            });
-
-            const updatedComments = await res.json();
-            
-            if (res.ok) {
-                // Update Local Memory
-                const recipe = allRecipes.find(r => r._id === activeRecipeId);
-                recipe.comments = updatedComments;
-                
-                // Refresh UI
-                renderComments(updatedComments);
-                input.value = '';
-            }
-        } catch (err) {
-            console.error("Comment failed:", err);
-            alert("Could not post comment.");
-        }
-    }
-
-    function renderComments(comments) {
-        const container = document.getElementById('commentsContainer');
-        if (!comments || comments.length === 0) {
-            container.innerHTML = '<p class="text-gray-400 text-sm italic">No comments yet. Start the conversation!</p>';
+    // --- FOLLOW FEATURE ---
+    function updateFollowButton(author) {
+        const placeholder = document.getElementById('followBtnPlaceholder');
+        if (!author || author._id === currentUserId) {
+            placeholder.innerHTML = '';
             return;
         }
-        container.innerHTML = comments.map(c => `
-            <div class="bg-gray-50 p-4 rounded-2xl border border-gray-100">
-                <p class="text-xs font-bold text-coral mb-1">@${c.username}</p>
-                <p class="text-gray-700 text-sm">${c.text}</p>
-            </div>
-        `).join('');
+        const isFollowing = author.followers?.some(id => id.toString() === currentUserId);
+        placeholder.innerHTML = `
+            <button onclick="toggleFollow('${author._id}')" class="px-4 py-1.5 rounded-full text-sm font-bold border-2 border-coral transition-all 
+            ${isFollowing ? 'bg-coral text-white' : 'text-coral hover:bg-coral hover:text-white'}">
+                ${isFollowing ? 'Following' : 'Follow'}
+            </button>`;
     }
 
-    // Liked UI logic
+    async function toggleFollow(targetUserId) {
+        try {
+            const res = await fetch(`https://pantry-pal-jur7.onrender.com/api/auth/follow/${targetUserId}`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                body: JSON.stringify({ currentUserId })
+            });
+            const data = await res.json();
+            if (res.ok) {
+                allRecipes.forEach(r => {
+                    if (r.author && (r.author._id || r.author).toString() === targetUserId) {
+                        r.author.followers = data.isFollowing ? [...(r.author.followers || []), currentUserId] : r.author.followers.filter(id => id.toString() !== currentUserId);
+                    }
+                });
+                updateFollowButton(allRecipes.find(r => r._id === activeRecipeId).author);
+            }
+        } catch (err) { console.error(err); }
+    }
+
+    // --- SAVE FEATURE ---
+    async function toggleSave(recipeId) {
+        try {
+            const res = await fetch(`https://pantry-pal-jur7.onrender.com/api/recipes/save/${recipeId}`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                body: JSON.stringify({ userId: currentUserId })
+            });
+            const data = await res.json();
+            if (res.ok) {
+                const recipe = allRecipes.find(r => r._id === recipeId);
+                recipe.saves = data.saves;
+                updateSaveUI(data.isSaved);
+            }
+        } catch (err) { console.error(err); }
+    }
+
+    function updateSaveUI(isSaved) {
+        const btn = document.getElementById('modalSaveBtn');
+        const icon = document.getElementById('modalSaveIcon');
+        if (isSaved) {
+            btn.className = "flex items-center gap-2 px-4 py-2 rounded-2xl font-bold border-2 border-blue-500 bg-blue-500 text-white transition-all";
+            icon.classList.add('fill-current');
+        } else {
+            btn.className = "flex items-center gap-2 px-4 py-2 rounded-2xl font-bold border-2 border-gray-100 text-gray-400 hover:border-blue-200 transition-all";
+            icon.classList.remove('fill-current');
+        }
+    }
+
+    // --- LIKE FEATURE ---
     async function toggleLike(recipeId) {
         try {
             const res = await fetch(`https://pantry-pal-jur7.onrender.com/api/recipes/like/${recipeId}`, {
@@ -236,7 +250,7 @@
             if (res.ok) {
                 const recipe = allRecipes.find(r => r._id === recipeId);
                 recipe.likes = data.likes;
-                recipe.likedBy = data.likedBy; 
+                recipe.likedBy = data.likedBy;
                 document.getElementById('modalLikeCount').innerText = data.likes;
                 updateLikeUI(data.isLiked);
                 renderFeed(allRecipes);
@@ -256,16 +270,42 @@
         }
     }
 
-    function handleLogout() {
-        localStorage.clear();
-        window.location.href = '../index.html';
+    // --- COMMENT FEATURE ---
+    async function postComment() {
+        const input = document.getElementById('commentInput');
+        if (!input.value.trim() || !activeRecipeId) return;
+        try {
+            const res = await fetch(`https://pantry-pal-jur7.onrender.com/api/recipes/comment/${activeRecipeId}`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                body: JSON.stringify({ userId: currentUserId, username: localStorage.getItem('username'), text: input.value.trim() })
+            });
+            const updatedComments = await res.json();
+            if (res.ok) {
+                allRecipes.find(r => r._id === activeRecipeId).comments = updatedComments;
+                renderComments(updatedComments);
+                input.value = '';
+            }
+        } catch (err) { console.error(err); }
     }
 
-    function closeRecipeModal() {
-        document.getElementById('recipeModal').classList.add('hidden');
-        document.body.style.overflow = 'auto';
+    function renderComments(comments) {
+        const container = document.getElementById('commentsContainer');
+        if (!comments || comments.length === 0) {
+            container.innerHTML = '<p class="text-gray-400 text-sm italic">No comments yet.</p>';
+            return;
+        }
+        container.innerHTML = comments.map(c => `
+            <div class="bg-gray-50 p-4 rounded-2xl border border-gray-100">
+                <p class="text-xs font-bold text-coral mb-1">@${c.username}</p>
+                <p class="text-gray-700 text-sm">${c.text}</p>
+            </div>`).join('');
     }
+
+    function handleLogout() { localStorage.clear(); window.location.href = '../index.html'; }
+    function closeRecipeModal() { document.getElementById('recipeModal').classList.add('hidden'); document.body.style.overflow = 'auto'; }
 
     window.onload = fetchRecipes;
-</script></body>
+</script>
+</body>
 </html>
