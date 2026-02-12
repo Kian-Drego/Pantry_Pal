@@ -142,5 +142,17 @@ router.delete('/:id', async (req, res) => {
     res.status(500).json({ error: "Delete failed" });
   }
 });
-
+// Add this to Backend/routes/recipes.js
+router.put('/:id', async (req, res) => {
+  try {
+    const updatedRecipe = await Recipe.findByIdAndUpdate(
+      req.params.id, 
+      req.body, 
+      { returnDocument: 'after' }
+    );
+    res.json(updatedRecipe);
+  } catch (err) {
+    res.status(500).json({ error: "Update failed" });
+  }
+});
 module.exports = router;
