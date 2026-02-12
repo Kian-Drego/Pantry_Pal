@@ -13,15 +13,7 @@
         .text-coral { color: #E97D5B; }
         .bg-coral { background-color: #E97D5B; }
         .sidebar-item:hover { color: #E97D5B; }
-
-        /* Custom scrollbar for the chart area on small mobile */
-        .chart-container {
-            overflow-x: auto;
-            scrollbar-width: none;
-        }
-        .chart-container::-webkit-scrollbar {
-            display: none;
-        }
+        .chart-bar { transition: height 1.2s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
     </style>
 </head>
 <body class="bg-gray-50 flex flex-col md:flex-row min-h-screen">
@@ -38,96 +30,122 @@
             <a href="profilepage.html" class="flex items-center gap-4 px-5 py-2 sidebar-item transition-all"><i data-lucide="user"></i> Profile</a>
         </nav>
         <div class="border-t border-gray-100 pt-8">
-            <a href="../index.html" class="flex items-center gap-4 px-5 py-2 text-gray-500 font-semibold sidebar-item transition-all"><i data-lucide="log-out"></i> Log out</a>
+            <button onclick="handleLogout()" class="w-full flex items-center gap-4 px-5 py-2 text-gray-500 font-semibold hover:text-coral transition-all">
+                <i data-lucide="log-out"></i> Log out
+            </button>
         </div>
     </aside>
 
-    <nav class="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-100 flex justify-around items-center p-4 z-50">
-        <a href="homepage.html" class="text-gray-400"><i data-lucide="home"></i></a>
-        <a href="search.html" class="text-gray-400"><i data-lucide="search"></i></a>
-        <a href="create.html" class="text-gray-400"><i data-lucide="plus-square"></i></a>
-        <a href="leaderboard.html" class="text-gray-400"><i data-lucide="trophy"></i></a>
-        <a href="analytics.html" class="text-coral"><i data-lucide="bar-chart-2"></i></a>
-        <a href="profilepage.html" class="text-gray-400"><i data-lucide="user"></i></a>
-    </nav>
-
     <main class="flex-grow p-6 md:p-12 md:ml-72 bg-white pb-24 md:pb-12">
-        
-        <header class="mb-8 md:mb-10 text-center md:text-left">
+        <header class="mb-8 md:mb-10">
             <h1 class="text-4xl md:text-5xl brand-font text-coral mb-2">Your Insights</h1>
-            <p class="text-gray-500 text-base md:text-lg">Track how your recipes are performing.</p>
+            <p class="text-gray-500 text-base md:text-lg">Real-time performance of your culinary shared secrets.</p>
         </header>
 
         <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 mb-8">
-            <div class="bg-white border border-gray-100 rounded-[2rem] p-6 md:p-8 flex flex-col items-center shadow-sm">
-                <div class="w-10 h-10 md:w-12 md:h-12 bg-orange-50 rounded-xl md:rounded-2xl flex items-center justify-center text-orange-400 mb-4"><i data-lucide="eye" class="w-5 h-5 md:w-6 md:h-6"></i></div>
-                <span class="text-2xl md:text-4xl font-bold text-gray-900">0</span>
-                <span class="text-[9px] md:text-[10px] font-bold text-gray-400 uppercase tracking-widest mt-2 text-center">Total Views</span>
+            <div class="bg-white border border-gray-100 rounded-[2rem] p-6 flex flex-col items-center shadow-sm">
+                <div class="w-10 h-10 bg-orange-50 rounded-xl flex items-center justify-center text-orange-400 mb-4"><i data-lucide="utensils" class="w-5 h-5"></i></div>
+                <span id="statRecipes" class="text-2xl md:text-3xl font-bold text-gray-900">0</span>
+                <span class="text-[9px] font-bold text-gray-400 uppercase tracking-widest mt-2">Recipes</span>
             </div>
-            <div class="bg-white border border-gray-100 rounded-[2rem] p-6 md:p-8 flex flex-col items-center shadow-sm">
-                <div class="w-10 h-10 md:w-12 md:h-12 bg-pink-50 rounded-xl md:rounded-2xl flex items-center justify-center text-pink-400 mb-4"><i data-lucide="heart" class="w-5 h-5 md:w-6 md:h-6"></i></div>
-                <span class="text-2xl md:text-4xl font-bold text-gray-900">0</span>
-                <span class="text-[9px] md:text-[10px] font-bold text-gray-400 uppercase tracking-widest mt-2 text-center">Total Likes</span>
+            <div class="bg-white border border-gray-100 rounded-[2rem] p-6 flex flex-col items-center shadow-sm">
+                <div class="w-10 h-10 bg-pink-50 rounded-xl flex items-center justify-center text-pink-400 mb-4"><i data-lucide="heart" class="w-5 h-5"></i></div>
+                <span id="statLikes" class="text-2xl md:text-3xl font-bold text-gray-900">0</span>
+                <span class="text-[9px] font-bold text-gray-400 uppercase tracking-widest mt-2">Likes</span>
             </div>
-            <div class="bg-white border border-gray-100 rounded-[2rem] p-6 md:p-8 flex flex-col items-center shadow-sm">
-                <div class="w-10 h-10 md:w-12 md:h-12 bg-blue-50 rounded-xl md:rounded-2xl flex items-center justify-center text-blue-400 mb-4"><i data-lucide="bookmark" class="w-5 h-5 md:w-6 md:h-6"></i></div>
-                <span class="text-2xl md:text-4xl font-bold text-gray-900">0</span>
-                <span class="text-[9px] md:text-[10px] font-bold text-gray-400 uppercase tracking-widest mt-2 text-center">Total Saves</span>
+            <div class="bg-white border border-gray-100 rounded-[2rem] p-6 flex flex-col items-center shadow-sm">
+                <div class="w-10 h-10 bg-blue-50 rounded-xl flex items-center justify-center text-blue-400 mb-4"><i data-lucide="bookmark" class="w-5 h-5"></i></div>
+                <span id="statSaves" class="text-2xl md:text-3xl font-bold text-gray-900">0</span>
+                <span class="text-[9px] font-bold text-gray-400 uppercase tracking-widest mt-2">Saves</span>
             </div>
-            <div class="bg-white border border-gray-100 rounded-[2rem] p-6 md:p-8 flex flex-col items-center shadow-sm">
-                <div class="w-10 h-10 md:w-12 md:h-12 bg-green-50 rounded-xl md:rounded-2xl flex items-center justify-center text-green-400 mb-4"><i data-lucide="message-circle" class="w-5 h-5 md:w-6 md:h-6"></i></div>
-                <span class="text-2xl md:text-4xl font-bold text-gray-900">0</span>
-                <span class="text-[9px] md:text-[10px] font-bold text-gray-400 uppercase tracking-widest mt-2 text-center">Comments</span>
+            <div class="bg-white border border-gray-100 rounded-[2rem] p-6 flex flex-col items-center shadow-sm">
+                <div class="w-10 h-10 bg-green-50 rounded-xl flex items-center justify-center text-green-400 mb-4"><i data-lucide="message-circle" class="w-5 h-5"></i></div>
+                <span id="statComments" class="text-2xl md:text-3xl font-bold text-gray-900">0</span>
+                <span class="text-[9px] font-bold text-gray-400 uppercase tracking-widest mt-2">Comments</span>
             </div>
         </div>
 
-        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 md:gap-8">
-            
-            <div class="lg:col-span-7 bg-white border border-gray-100 rounded-[2.5rem] p-8 md:p-10 flex flex-col shadow-sm">
-                <h3 class="text-xl md:text-2xl font-bold text-gray-900 mb-6 md:mb-8">Engagement Overview</h3>
-                
-                <div class="chart-container">
-                    <div class="flex flex-grow gap-4 md:gap-6 min-w-[300px]">
-                        <div class="flex flex-col justify-between text-gray-400 font-medium py-2 pb-10 text-sm">
-                            <span>4</span>
-                            <span>3</span>
-                            <span>2</span>
-                            <span>1</span>
-                            <span>0</span>
-                        </div>
-
-                        <div class="flex-grow flex items-end justify-around border-l border-b border-gray-100 pb-2 px-2 md:px-4 h-56 md:h-64">
-                            <div class="flex flex-col items-center gap-3 w-12 md:w-16">
-                                <div class="w-full bg-orange-100 rounded-t-xl" style="height: 8px;"></div>
-                                <span class="text-[9px] md:text-[10px] font-bold text-gray-400 uppercase">Views</span>
-                            </div>
-                            <div class="flex flex-col items-center gap-3 w-12 md:w-16">
-                                <div class="w-full bg-pink-100 rounded-t-xl" style="height: 8px;"></div>
-                                <span class="text-[9px] md:text-[10px] font-bold text-gray-400 uppercase">Likes</span>
-                            </div>
-                            <div class="flex flex-col items-center gap-3 w-12 md:w-16">
-                                <div class="w-full bg-green-100 rounded-t-xl" style="height: 8px;"></div>
-                                <span class="text-[9px] md:text-[10px] font-bold text-gray-400 uppercase">Comm.</span>
-                            </div>
-                        </div>
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+            <div class="lg:col-span-8 bg-white border border-gray-100 rounded-[2.5rem] p-8 shadow-sm">
+                <h3 class="text-xl font-bold text-gray-900 mb-8">Engagement Overview</h3>
+                <div class="flex items-end justify-around border-l border-b border-gray-100 pb-2 px-4 h-64">
+                    <div class="flex flex-col items-center gap-3 w-16">
+                        <div id="barRecipes" class="w-full bg-orange-100 rounded-t-xl chart-bar" style="height: 0%;"></div>
+                        <span class="text-[9px] font-bold text-gray-400">RECIPES</span>
+                    </div>
+                    <div class="flex flex-col items-center gap-3 w-16">
+                        <div id="barLikes" class="w-full bg-pink-100 rounded-t-xl chart-bar" style="height: 0%;"></div>
+                        <span class="text-[9px] font-bold text-gray-400">LIKES</span>
+                    </div>
+                    <div class="flex flex-col items-center gap-3 w-16">
+                        <div id="barSaves" class="w-full bg-blue-100 rounded-t-xl chart-bar" style="height: 0%;"></div>
+                        <span class="text-[9px] font-bold text-gray-400">SAVES</span>
+                    </div>
+                    <div class="flex flex-col items-center gap-3 w-16">
+                        <div id="barComments" class="w-full bg-green-100 rounded-t-xl chart-bar" style="height: 0%;"></div>
+                        <span class="text-[9px] font-bold text-gray-400">COMMENTS</span>
                     </div>
                 </div>
             </div>
 
-            <div class="lg:col-span-5 bg-coral rounded-[2.5rem] p-8 md:p-10 text-white relative flex flex-col justify-center shadow-lg shadow-orange-100 overflow-hidden">
-                <h3 class="text-2xl md:text-3xl font-bold mb-4 md:mb-6">Pro Tip</h3>
-                <p class="text-lg md:text-xl leading-relaxed opacity-90 relative z-10">
-                    Recipes with detailed stories and at least 5 high-quality tags tend to get 
-                    <span class="font-bold underline underline-offset-4">3x more engagement.</span> 
+            <div class="lg:col-span-4 bg-coral rounded-[2.5rem] p-8 text-white flex flex-col justify-center shadow-lg relative overflow-hidden">
+                <h3 class="text-2xl font-bold mb-4">Chef Pro-Tip</h3>
+                <p class="text-lg opacity-90 leading-relaxed z-10">
+                    Engaging with <span class="font-bold">comments</span> increases your visibility on the Fresh Feed by up to 50%!
                 </p>
-                <div class="absolute -bottom-6 -right-6 w-24 h-24 md:w-32 md:h-32 bg-white/10 rounded-full"></div>
+                <div class="absolute -bottom-6 -right-6 w-32 h-32 bg-white/10 rounded-full"></div>
             </div>
         </div>
-
     </main>
 
     <script>
+        // 1. Auth Guard
+        if (!localStorage.getItem('token')) window.location.href = '../index.html';
+
+        // 2. Fetch and Aggregate Data
+        async function loadAnalytics() {
+            const userId = localStorage.getItem('userId');
+            try {
+                const response = await fetch('https://pantry-pal-jur7.onrender.com/api/recipes');
+                const recipes = await response.json();
+                
+                // Filter only user's recipes
+                const myRecipes = recipes.filter(r => (r.author?._id || r.author).toString() === userId);
+                
+                const totalRecipes = myRecipes.length;
+                const totalLikes = myRecipes.reduce((sum, r) => sum + (r.likes || 0), 0);
+                
+                // Note: These fields default to 0 until you implement the backend logic for them
+                const totalSaves = myRecipes.reduce((sum, r) => sum + (r.saves?.length || 0), 0);
+                const totalComments = myRecipes.reduce((sum, r) => sum + (r.comments?.length || 0), 0);
+
+                // Update UI Numbers
+                document.getElementById('statRecipes').innerText = totalRecipes;
+                document.getElementById('statLikes').innerText = totalLikes;
+                document.getElementById('statSaves').innerText = totalSaves;
+                document.getElementById('statComments').innerText = totalComments;
+
+                // Update Chart Animation (Scales to a max of 100%)
+                setTimeout(() => {
+                    document.getElementById('barRecipes').style.height = `${Math.min(totalRecipes * 10, 100)}%`;
+                    document.getElementById('barLikes').style.height = `${Math.min(totalLikes * 5, 100)}%`;
+                    document.getElementById('barSaves').style.height = `${Math.min(totalSaves * 8, 100)}%`;
+                    document.getElementById('barComments').style.height = `${Math.min(totalComments * 12, 100)}%`;
+                }, 300);
+
+            } catch (err) {
+                console.error("Analytics failed to load:", err);
+            }
+        }
+
+        // 3. Logout System
+        function handleLogout() {
+            localStorage.clear();
+            window.location.href = '../index.html';
+        }
+
         lucide.createIcons();
+        window.onload = loadAnalytics;
     </script>
 </body>
 </html>

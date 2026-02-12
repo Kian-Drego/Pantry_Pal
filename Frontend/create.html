@@ -12,6 +12,7 @@
         .brand-font { font-family: 'Fredoka One', cursive; }
         .text-coral { color: #E97D5B; }
         .bg-coral { background-color: #E97D5B; }
+        .sidebar-item:hover { color: #E97D5B; }
     </style>
 </head>
 <body class="bg-gray-50 flex flex-col md:flex-row min-h-screen">
@@ -19,22 +20,28 @@
     <aside class="hidden md:flex w-72 bg-white border-r border-gray-100 flex-col p-8 fixed h-full z-10">
         <div class="text-3xl brand-font text-coral mb-12">PantryPal</div>
         <nav class="space-y-6 flex-grow text-gray-500 font-semibold">
-    <a href="homepage.html" class="flex items-center gap-4 px-5 py-2 hover:text-coral transition-all"><i data-lucide="home"></i> Home</a>
-    <a href="search.html" class="flex items-center gap-4 px-5 py-2 hover:text-coral transition-all"><i data-lucide="search"></i> Search</a>
-    <a href="create.html" class="flex items-center gap-4 bg-coral text-white px-5 py-4 rounded-2xl shadow-lg shadow-orange-100"><i data-lucide="plus-square"></i> Create</a>
-    <a href="leaderboard.html" class="flex items-center gap-4 px-5 py-2 hover:text-coral transition-all"><i data-lucide="trophy"></i> Leaderboard</a>
-    <a href="analytics.html" class="flex items-center gap-4 px-5 py-2 hover:text-coral transition-all"><i data-lucide="bar-chart-2"></i> Analytics</a>
-    <a href="profilepage.html" class="flex items-center gap-4 px-5 py-2 hover:text-coral transition-all"><i data-lucide="user"></i> Profile</a>
-</nav>
+            <a href="homepage.html" class="flex items-center gap-4 px-5 py-2 hover:text-coral transition-all"><i data-lucide="home"></i> Home</a>
+            <a href="search.html" class="flex items-center gap-4 px-5 py-2 hover:text-coral transition-all"><i data-lucide="search"></i> Search</a>
+            <a href="create.html" class="flex items-center gap-4 bg-coral text-white px-5 py-4 rounded-2xl shadow-lg shadow-orange-100"><i data-lucide="plus-square"></i> Create</a>
+            <a href="leaderboard.html" class="flex items-center gap-4 px-5 py-2 hover:text-coral transition-all"><i data-lucide="trophy"></i> Leaderboard</a>
+            <a href="analytics.html" class="flex items-center gap-4 px-5 py-2 hover:text-coral transition-all"><i data-lucide="bar-chart-2"></i> Analytics</a>
+            <a href="profilepage.html" class="flex items-center gap-4 px-5 py-2 hover:text-coral transition-all"><i data-lucide="user"></i> Profile</a>
+        </nav>
 
-<nav class="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-100 flex justify-around items-center p-4 z-50">
-    <a href="homepage.html" class="text-gray-400"><i data-lucide="home"></i></a>
-    <a href="search.html" class="text-gray-400"><i data-lucide="search"></i></a>
-    <a href="create.html" class="text-coral"><i data-lucide="plus-square"></i></a>
-    <a href="leaderboard.html" class="text-gray-400"><i data-lucide="trophy"></i></a>
-    <a href="analytics.html" class="text-gray-400"><i data-lucide="bar-chart-2"></i></a> <a href="profilepage.html" class="text-gray-400"><i data-lucide="user"></i></a>
-</nav>
+        <div class="border-t border-gray-100 pt-8">
+            <button onclick="handleLogout()" class="w-full flex items-center gap-4 px-5 py-2 text-gray-500 font-semibold hover:text-coral transition-all">
+                <i data-lucide="log-out"></i> Log out
+            </button>
+        </div>
     </aside>
+
+    <nav class="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-100 flex justify-around items-center p-4 z-50">
+        <a href="homepage.html" class="text-gray-400"><i data-lucide="home"></i></a>
+        <a href="search.html" class="text-gray-400"><i data-lucide="search"></i></a>
+        <a href="create.html" class="text-coral"><i data-lucide="plus-square"></i></a>
+        <a href="leaderboard.html" class="text-gray-400"><i data-lucide="trophy"></i></a>
+        <a href="profilepage.html" class="text-gray-400"><i data-lucide="user"></i></a>
+    </nav>
 
     <main class="flex-grow p-6 md:p-12 md:ml-72 bg-white min-h-screen pb-24 md:pb-12">
         <header class="mb-8 md:mb-10">
@@ -81,16 +88,28 @@
                 </button>
             </div>
 
-            <button type="submit" class="w-full md:w-auto bg-coral text-white font-bold px-12 py-5 rounded-2xl shadow-lg hover:scale-[1.02] active:scale-[0.98] transition-all">
+            <button type="submit" id="submitBtn" class="w-full md:w-auto bg-coral text-white font-bold px-12 py-5 rounded-2xl shadow-lg hover:scale-[1.02] active:scale-[0.98] transition-all">
                 Share Recipe
             </button>
         </form>
     </main>
 
     <script>
+        // --- 1. PROTECTED ROUTE CHECK ---
+        if (!localStorage.getItem('token')) {
+            window.location.href = '../index.html';
+        }
+
         lucide.createIcons();
 
-        // Dynamically add more inputs for ingredients or steps
+        // --- 2. LOGOUT LOGIC ---
+        function handleLogout() {
+            localStorage.removeItem('token');
+            localStorage.removeItem('userId');
+            localStorage.removeItem('username');
+            window.location.href = '../index.html';
+        }
+
         function addItem(containerId, className, isTextArea = false) {
             const container = document.getElementById(containerId);
             const input = document.createElement(isTextArea ? 'textarea' : 'input');
@@ -100,11 +119,12 @@
             container.appendChild(input);
         }
 
-        // Handle Form Submission
         document.getElementById('recipeForm').addEventListener('submit', async (e) => {
             e.preventDefault();
+            const submitBtn = document.getElementById('submitBtn');
+            submitBtn.disabled = true;
+            submitBtn.innerText = "Sharing...";
 
-            // Collect all ingredients and steps into arrays
             const ingredients = Array.from(document.querySelectorAll('.ingredient-input')).map(i => i.value).filter(v => v);
             const instructions = Array.from(document.querySelectorAll('.step-input')).map(i => i.value).filter(v => v);
             
@@ -114,7 +134,7 @@
                 image: document.getElementById('imageUrl').value,
                 ingredients: ingredients,
                 instructions: instructions,
-                author: localStorage.getItem('userId') // Linking to the logged-in user
+                author: localStorage.getItem('userId')
             };
 
             try {
@@ -132,10 +152,14 @@
                     window.location.href = 'homepage.html';
                 } else {
                     alert('Failed to share recipe. Please try again.');
+                    submitBtn.disabled = false;
+                    submitBtn.innerText = "Share Recipe";
                 }
             } catch (err) {
                 console.error(err);
                 alert('Server connection error.');
+                submitBtn.disabled = false;
+                submitBtn.innerText = "Share Recipe";
             }
         });
     </script>
