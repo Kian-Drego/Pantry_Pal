@@ -5,23 +5,21 @@ const RecipeSchema = new mongoose.Schema({
   description: { type: String },
   ingredients: [String],
   instructions: [String],
-  prepTime: String,
-  cookTime: String,
   image: String,
-  author: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
-  /**
-   * LIKE SYSTEM FIX
-   * likes: The total count for fast display
-   * likedBy: Array of User IDs to prevent duplicate likes
-   */
+  author: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
   likes: { type: Number, default: 0 },
-  likedBy: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User', default: [] }],
-  category: String,
+  likedBy: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
+  
+  // NEW FIELDS
+  saves: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
+  comments: [{
+    userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+    username: String,
+    text: String,
+    createdAt: { type: Date, default: Date.now }
+  }],
+  
   createdAt: { type: Date, default: Date.now }
 });
-
-// Indexing author and title for faster feed loading and searching
-RecipeSchema.index({ author: 1 });
-RecipeSchema.index({ title: 'text' });
 
 module.exports = mongoose.model('Recipe', RecipeSchema);
