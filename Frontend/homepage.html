@@ -82,15 +82,18 @@
     </div>
 
 <script>
+    // 1. GLOBAL STATE
     let allRecipes = [];
     const currentUserId = localStorage.getItem('userId');
     const token = localStorage.getItem('token');
 
+    // 2. FETCH RECIPES
     async function fetchRecipes() {
         const statusDiv = document.getElementById('feedStatus');
         const API_URL = 'https://pantry-pal-jur7.onrender.com/api/recipes';
         
         try {
+            // Cache buster ensures fresh data from server
             const response = await fetch(`${API_URL}?t=${Date.now()}`);
             if (!response.ok) throw new Error('Server unreachable');
             
@@ -113,8 +116,11 @@
         }
     }
 
+    // 3. RENDER MAIN GRID
     function renderFeed(recipes) {
         const container = document.getElementById('recipeFeed');
+        if (!container) return;
+
         container.innerHTML = recipes.map(recipe => {
             const isLiked = recipe.likedBy?.some(id => (id._id || id).toString() === currentUserId);
             
@@ -140,6 +146,7 @@
         lucide.createIcons();
     }
 
+    // 4. MODAL LOGIC
     function openRecipeModal(recipeId) {
         const recipe = allRecipes.find(r => r._id === recipeId);
         if (!recipe) return;
@@ -151,11 +158,17 @@
         document.getElementById('modalIngredients').innerHTML = (recipe.ingredients || []).map(i => `<li>${i}</li>`).join('');
         document.getElementById('modalInstructions').innerHTML = (recipe.instructions || []).map(s => `<li>${s}</li>`).join('');
         
+        // --- Sync Like Button ---
         const isLiked = recipe.likedBy?.some(id => (id._id || id).toString() === currentUserId);
         document.getElementById('modalLikeCount').innerText = recipe.likes || 0;
         updateLikeUI(isLiked);
-        document.getElementById('modalLikeBtn').onclick = () => toggleLike(recipe._id);
+        
+        document.getElementById('modalLikeBtn').onclick = (e) => {
+            e.stopPropagation();
+            toggleLike(recipe._id);
+        };
 
+        // --- Sync Follow Button ---
         updateFollowButton(recipe.author);
 
         document.getElementById('recipeModal').classList.remove('hidden');
@@ -163,6 +176,7 @@
         lucide.createIcons();
     }
 
+    // 5. FOLLOW SYSTEM
     function updateFollowButton(author) {
         const placeholder = document.getElementById('followBtnPlaceholder');
         if (author && author._id !== currentUserId) {
@@ -179,41 +193,8 @@
         }
     }
 
-    async function toggleLike(recipeId) {
-        if (!currentUserId) return alert("Please log in to like!");
-        try {
-            const res = await fetch(`https://pantry-pal-jur7.onrender.com/api/recipes/like/${recipeId}`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ userId: currentUserId })
-            });
-            const data = await res.json();
-            if (res.ok) {
-                const recipe = allRecipes.find(r => r._id === recipeId);
-                recipe.likes = data.likes;
-                recipe.likedBy = data.likedBy; 
-                
-                document.getElementById('modalLikeCount').innerText = data.likes;
-                updateLikeUI(data.isLiked);
-                renderFeed(allRecipes); 
-            }
-        } catch (err) { console.error("Like error:", err); }
-    }
-
-    function updateLikeUI(isLiked) {
-        const btn = document.getElementById('modalLikeBtn');
-        const icon = document.getElementById('modalLikeIcon');
-        if (isLiked) {
-            btn.className = "flex items-center gap-2 px-5 py-2.5 rounded-2xl font-bold border-2 border-red-500 bg-red-500 text-white transition-all";
-            icon.classList.add('fill-current');
-        } else {
-            btn.className = "flex items-center gap-2 px-5 py-2.5 rounded-2xl font-bold border-2 border-gray-100 text-gray-400 hover:border-red-200 transition-all";
-            icon.classList.remove('fill-current');
-        }
-    }
-
     async function toggleFollow(targetUserId) {
-        if (!currentUserId || !token) return alert("Please log in to follow!");
+        if (!currentUserId || !token) return alert("Please log in to follow chefs!");
         const followBtn = document.getElementById('followBtn');
         followBtn.disabled = true;
 
@@ -229,9 +210,9 @@
             const data = await response.json();
             
             if (response.ok) {
-                // Update every recipe by this author in the local feed
+                // Sync Author state across ALL recipes in local memory
                 allRecipes.forEach(r => {
-                    if (r.author && (r.author._id || r.author) === targetUserId) {
+                    if (r.author && (r.author._id || r.author).toString() === targetUserId) {
                         if (!r.author.followers) r.author.followers = [];
                         if (data.isFollowing) {
                             r.author.followers.push(currentUserId);
@@ -241,8 +222,8 @@
                     }
                 });
                 
-                const authorData = allRecipes.find(r => (r.author._id || r.author) === targetUserId).author;
-                updateFollowButton(authorData);
+                const updatedAuthor = allRecipes.find(r => (r.author._id || r.author).toString() === targetUserId).author;
+                updateFollowButton(updatedAuthor);
             }
         } catch (err) {
             console.error("Follow error:", err);
@@ -251,11 +232,59 @@
         }
     }
 
+    // 6. LIKE SYSTEM
+    async function toggleLike(recipeId) {
+        if (!currentUserId) return alert("Please log in to like recipes!");
+        const likeBtn = document.getElementById('modalLikeBtn');
+        likeBtn.disabled = true;
+
+        try {
+            const res = await fetch(`https://pantry-pal-jur7.onrender.com/api/recipes/like/${recipeId}`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ userId: currentUserId })
+            });
+            const data = await res.json();
+            
+            if (res.ok) {
+                // Update local global variable
+                const recipe = allRecipes.find(r => r._id === recipeId);
+                recipe.likes = data.likes;
+                recipe.likedBy = data.likedBy; 
+                
+                // Refresh Modal UI
+                document.getElementById('modalLikeCount').innerText = data.likes;
+                updateLikeUI(data.isLiked);
+                
+                // Refresh main grid background heart icons
+                renderFeed(allRecipes);
+            }
+        } catch (err) { 
+            console.error("Like error:", err); 
+        } finally {
+            likeBtn.disabled = false;
+        }
+    }
+
+    function updateLikeUI(isLiked) {
+        const btn = document.getElementById('modalLikeBtn');
+        const icon = document.getElementById('modalLikeIcon');
+        if (isLiked) {
+            btn.className = "flex items-center gap-2 px-5 py-2.5 rounded-2xl font-bold border-2 border-red-500 bg-red-500 text-white transition-all";
+            icon.classList.add('fill-current');
+        } else {
+            btn.className = "flex items-center gap-2 px-5 py-2.5 rounded-2xl font-bold border-2 border-gray-100 text-gray-400 hover:border-red-200 transition-all";
+            icon.classList.remove('fill-current');
+        }
+    }
+
+    // 7. UTILITIES
     function closeRecipeModal() {
         document.getElementById('recipeModal').classList.add('hidden');
         document.body.style.overflow = 'auto';
     }
 
+    // INITIALIZE
     window.onload = fetchRecipes;
 </script>
 </body>

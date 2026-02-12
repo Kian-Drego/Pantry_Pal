@@ -1,15 +1,14 @@
 const router = require('express').Router();
 const Recipe = require('../models/Recipe');
-const User = require('../models/User'); // Required if you plan to update points
+const User = require('../models/User');
 
 /**
  * 1. Get all recipes for Homepage Feed
- * Populates author and likedBy details
  */
 router.get('/', async (req, res) => {
   try {
     const recipes = await Recipe.find()
-      .sort({ createdAt: -1 }) // Show newest recipes first
+      .sort({ createdAt: -1 }) 
       .populate({
         path: 'author',
         select: 'username followers profilePic'
@@ -28,8 +27,10 @@ router.post('/', async (req, res) => {
     const newRecipe = new Recipe(req.body);
     await newRecipe.save();
     
-    // Optional: Award points to the user for posting
-    await User.findByIdAndUpdate(req.body.author, { $inc: { points: 10 } });
+    // Award 10 points to the user for posting a recipe
+    if (req.body.author) {
+      await User.findByIdAndUpdate(req.body.author, { $inc: { points: 10 } });
+    }
 
     res.status(201).json({
       message: "Recipe shared successfully!",
@@ -42,8 +43,7 @@ router.post('/', async (req, res) => {
 });
 
 /**
- * 3. ATOMIC Toggle Like Logic
- * Uses $addToSet and $pull to prevent duplicate likes and race conditions
+ * 3. ATOMIC Toggle Like Logic (FIXED)
  */
 router.post('/like/:id', async (req, res) => {
   try {
@@ -53,12 +53,17 @@ router.post('/like/:id', async (req, res) => {
     const recipe = await Recipe.findById(req.params.id);
     if (!recipe) return res.status(404).json({ error: "Recipe not found" });
 
-    // Check if user already liked the recipe using string comparison
+    // SAFETY: If legacy recipe has no likedBy array, initialize it
+    if (!recipe.likedBy) {
+      recipe.likedBy = [];
+    }
+
+    // Check if user already liked using string comparison
     const alreadyLiked = recipe.likedBy.some(id => id.toString() === userId);
 
     let updatedRecipe;
     if (!alreadyLiked) {
-      // Add Like: $addToSet ensures uniqueness
+      // LIKE: Use $addToSet to prevent duplicate IDs in the array
       updatedRecipe = await Recipe.findByIdAndUpdate(
         req.params.id,
         { 
@@ -68,7 +73,7 @@ router.post('/like/:id', async (req, res) => {
         { new: true }
       );
     } else {
-      // Remove Like (Unlike)
+      // UNLIKE: Use $pull to remove the specific user ID
       updatedRecipe = await Recipe.findByIdAndUpdate(
         req.params.id,
         { 
