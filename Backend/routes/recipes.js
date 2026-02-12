@@ -1,11 +1,13 @@
 const router = require('express').Router();
 const Recipe = require('../models/Recipe');
 
-// 1. Get all recipes (Enhanced with likedBy population if needed)
+// 1. Get all recipes
+// Added 'likedBy' to populate to ensure feed icons stay in sync
 router.get('/', async (req, res) => {
   try {
-    // We populate author to show @username and follow status
-    const recipes = await Recipe.find().populate('author', 'username followers');
+    const recipes = await Recipe.find()
+      .populate('author', 'username followers')
+      .populate('likedBy', '_id'); 
     res.json(recipes);
   } catch (err) {
     res.status(500).json({ error: "Could not fetch recipes" });
@@ -28,8 +30,8 @@ router.post('/', async (req, res) => {
 });
 
 /**
- * 3. NEW: Toggle Like Route
- * Handles the logic for liking and unliking a recipe.
+ * 3. FIXED: Toggle Like Route
+ * Uses .toString() to avoid type-mismatch bugs between Mongoose and Frontend
  */
 router.post('/like/:id', async (req, res) => {
   try {
@@ -38,25 +40,25 @@ router.post('/like/:id', async (req, res) => {
 
     if (!recipe) return res.status(404).json({ error: "Recipe not found" });
 
-    // Initialize likedBy array if it doesn't exist (schema safety)
     if (!recipe.likedBy) recipe.likedBy = [];
 
-    const index = recipe.likedBy.indexOf(userId);
+    // FIX: Check existence using string comparison
+    const alreadyLiked = recipe.likedBy.some(id => id.toString() === userId);
 
-    if (index === -1) {
-      // User hasn't liked yet -> Add like
+    if (!alreadyLiked) {
+      // Add Like
       recipe.likedBy.push(userId);
       recipe.likes = (recipe.likes || 0) + 1;
     } else {
-      // User already liked -> Remove like (Unlike)
-      recipe.likedBy.splice(index, 1);
+      // Remove Like (Unlike)
+      recipe.likedBy = recipe.likedBy.filter(id => id.toString() !== userId);
       recipe.likes = Math.max(0, (recipe.likes || 1) - 1);
     }
 
     await recipe.save();
     res.json({ 
       likes: recipe.likes, 
-      isLiked: index === -1,
+      isLiked: !alreadyLiked,
       likedBy: recipe.likedBy 
     });
   } catch (err) {
