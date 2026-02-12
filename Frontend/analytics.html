@@ -69,7 +69,7 @@
 
         <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
             <div class="lg:col-span-12 bg-white border border-gray-100 rounded-[2.5rem] p-8 shadow-sm">
-                <h3 class="text-xl font-bold text-gray-900 mb-4 text-center">Engagement Trends</h3>
+                <h3 class="text-xl font-bold text-gray-900 mb-4 text-center">Performance Overview</h3>
                 <div class="relative h-[400px] w-full">
                     <canvas id="engagementChart"></canvas>
                 </div>
@@ -113,47 +113,48 @@
             
             if (engagementChart) engagementChart.destroy();
 
-            // REGISTER PLUGIN
+            // REGISTER PLUGIN (Already included in head)
             Chart.register(ChartDataLabels);
 
             engagementChart = new Chart(ctx, {
-                type: 'line', // Changed to line
+                type: 'bar', // Set to Bar
                 data: {
                     labels: ['Recipes', 'Likes', 'Saves', 'Comments'],
                     datasets: [{
                         data: [data.recipes, data.likes, data.saves, data.comments],
+                        backgroundColor: [
+                            'rgba(233, 125, 91, 0.4)', // Recipes (Lighter)
+                            'rgba(233, 125, 91, 0.6)', // Likes
+                            'rgba(233, 125, 91, 0.8)', // Saves
+                            'rgba(233, 125, 91, 1)'    // Comments (Darkest)
+                        ],
                         borderColor: '#E97D5B',
-                        backgroundColor: 'rgba(233, 125, 91, 0.1)',
-                        borderWidth: 4,
-                        pointBackgroundColor: '#E97D5B',
-                        pointBorderColor: '#fff',
-                        pointBorderWidth: 2,
-                        pointRadius: 8,
-                        pointHoverRadius: 10,
-                        tension: 0.4, // Smooth curve
-                        fill: true // Light shaded area under the line
+                        borderWidth: 2,
+                        borderRadius: 12, // Modern rounded bars
+                        barThickness: 45
                     }]
                 },
                 options: {
-                    indexAxis: 'y', // This flips the line graph horizontally
+                    indexAxis: 'y', // MAKES IT HORIZONTAL
                     responsive: true,
                     maintainAspectRatio: false,
                     layout: {
-                        padding: { right: 60, top: 20, bottom: 20 }
+                        padding: { right: 70 } // Extra space for labels so they don't clip
                     },
                     plugins: {
                         legend: { display: false },
                         datalabels: {
-                            anchor: 'center',
+                            anchor: 'end',
                             align: 'right',
-                            offset: 15,
+                            offset: 10,
                             color: '#111827',
                             font: {
                                 family: 'Outfit',
                                 weight: 'bold',
-                                size: 14
+                                size: 15
                             },
                             formatter: (value) => {
+                                // Handles big numbers (e.g. 10000 -> 10k)
                                 return value >= 1000 ? (value/1000).toFixed(1) + 'k' : value;
                             }
                         }
@@ -161,8 +162,8 @@
                     scales: {
                         x: {
                             beginAtZero: true,
-                            grid: { color: '#f3f4f6' },
-                            ticks: { display: false }
+                            grid: { display: false },
+                            ticks: { display: false } // Numbers are on bars, so hide bottom axis
                         },
                         y: {
                             grid: { display: false },
