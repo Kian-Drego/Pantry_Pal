@@ -67,10 +67,10 @@
                     <h2 id="modalTitle" class="text-3xl brand-font text-gray-900"></h2>
                     <div class="flex gap-2">
                         <button id="modalLikeBtn" onclick="toggleLike(activeRecipeId)" class="flex items-center gap-2 px-4 py-2 rounded-2xl font-bold border-2 transition-all">
-                            <i data-lucide="thumbs-up" id="modalLikeIcon" class="w-5 h-5"></i>
+                            <i data-lucide="heart" id="modalLikeIcon" class="w-5 h-5"></i>
                             <span id="modalLikeCount">0</span>
                         </button>
-                        <button id="modalSaveBtn" onclick="toggleSave(activeRecipeId)" class="flex items-center gap-2 px-4 py-2 rounded-2xl font-bold border-2 border-gray-100 text-gray-400 hover:border-blue-200 transition-all">
+                        <button id="modalSaveBtn" onclick="toggleSave(activeRecipeId)" class="flex items-center gap-2 px-4 py-2 rounded-2xl font-bold border-2 transition-all">
                             <i data-lucide="bookmark" id="modalSaveIcon" class="w-5 h-5"></i>
                         </button>
                     </div>
@@ -116,7 +116,7 @@
             const response = await fetch('https://pantry-pal-jur7.onrender.com/api/recipes?t=' + Date.now());
             allRecipes = await response.json();
             if (allRecipes.length === 0) {
-                statusDiv.innerHTML = `<h2 class="text-2xl brand-font text-gray-800">No recipes yet!</h2>`;
+                if(statusDiv) statusDiv.innerHTML = `<h2 class="text-2xl brand-font text-gray-800">No recipes yet!</h2>`;
             } else {
                 if(statusDiv) statusDiv.remove();
                 renderFeed(allRecipes);
@@ -162,12 +162,19 @@
         document.getElementById('modalIngredients').innerHTML = (recipe.ingredients || []).map(i => `<li>${i}</li>`).join('');
         document.getElementById('modalInstructions').innerHTML = (recipe.instructions || []).map(s => `<li>${s}</li>`).join('');
         
-        // Sync Buttons
-        updateLikeUI(recipe.likedBy?.some(id => (id._id || id).toString() === currentUserId));
-        updateSaveUI(recipe.saves?.some(id => (id._id || id).toString() === currentUserId));
-        updateFollowButton(recipe.author);
+        // Sync Likes
+        const isLiked = recipe.likedBy?.some(id => (id._id || id).toString() === currentUserId);
         document.getElementById('modalLikeCount').innerText = recipe.likes || 0;
+        updateLikeUI(isLiked);
 
+        // Sync Saves
+        const isSaved = recipe.saves?.some(id => (id._id || id).toString() === currentUserId);
+        updateSaveUI(isSaved);
+
+        // Sync Follow
+        updateFollowButton(recipe.author);
+
+        // Load Comments
         renderComments(recipe.comments || []);
 
         document.getElementById('recipeModal').classList.remove('hidden');
@@ -175,70 +182,7 @@
         lucide.createIcons();
     }
 
-    // --- FOLLOW FEATURE ---
-    function updateFollowButton(author) {
-        const placeholder = document.getElementById('followBtnPlaceholder');
-        if (!author || author._id === currentUserId) {
-            placeholder.innerHTML = '';
-            return;
-        }
-        const isFollowing = author.followers?.some(id => id.toString() === currentUserId);
-        placeholder.innerHTML = `
-            <button onclick="toggleFollow('${author._id}')" class="px-4 py-1.5 rounded-full text-sm font-bold border-2 border-coral transition-all 
-            ${isFollowing ? 'bg-coral text-white' : 'text-coral hover:bg-coral hover:text-white'}">
-                ${isFollowing ? 'Following' : 'Follow'}
-            </button>`;
-    }
-
-    async function toggleFollow(targetUserId) {
-        try {
-            const res = await fetch(`https://pantry-pal-jur7.onrender.com/api/auth/follow/${targetUserId}`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-                body: JSON.stringify({ currentUserId })
-            });
-            const data = await res.json();
-            if (res.ok) {
-                allRecipes.forEach(r => {
-                    if (r.author && (r.author._id || r.author).toString() === targetUserId) {
-                        r.author.followers = data.isFollowing ? [...(r.author.followers || []), currentUserId] : r.author.followers.filter(id => id.toString() !== currentUserId);
-                    }
-                });
-                updateFollowButton(allRecipes.find(r => r._id === activeRecipeId).author);
-            }
-        } catch (err) { console.error(err); }
-    }
-
-    // --- SAVE FEATURE ---
-    async function toggleSave(recipeId) {
-        try {
-            const res = await fetch(`https://pantry-pal-jur7.onrender.com/api/recipes/save/${recipeId}`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-                body: JSON.stringify({ userId: currentUserId })
-            });
-            const data = await res.json();
-            if (res.ok) {
-                const recipe = allRecipes.find(r => r._id === recipeId);
-                recipe.saves = data.saves;
-                updateSaveUI(data.isSaved);
-            }
-        } catch (err) { console.error(err); }
-    }
-
-    function updateSaveUI(isSaved) {
-        const btn = document.getElementById('modalSaveBtn');
-        const icon = document.getElementById('modalSaveIcon');
-        if (isSaved) {
-            btn.className = "flex items-center gap-2 px-4 py-2 rounded-2xl font-bold border-2 border-blue-500 bg-blue-500 text-white transition-all";
-            icon.classList.add('fill-current');
-        } else {
-            btn.className = "flex items-center gap-2 px-4 py-2 rounded-2xl font-bold border-2 border-gray-100 text-gray-400 hover:border-blue-200 transition-all";
-            icon.classList.remove('fill-current');
-        }
-    }
-
-    // --- LIKE FEATURE ---
+    // --- LIKE SYSTEM ---
     async function toggleLike(recipeId) {
         try {
             const res = await fetch(`https://pantry-pal-jur7.onrender.com/api/recipes/like/${recipeId}`, {
@@ -270,7 +214,75 @@
         }
     }
 
-    // --- COMMENT FEATURE ---
+    // --- SAVE SYSTEM ---
+    async function toggleSave(recipeId) {
+        try {
+            const res = await fetch(`https://pantry-pal-jur7.onrender.com/api/recipes/save/${recipeId}`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                body: JSON.stringify({ userId: currentUserId })
+            });
+            const data = await res.json();
+            if (res.ok) {
+                const recipe = allRecipes.find(r => r._id === recipeId);
+                recipe.saves = data.saves;
+                updateSaveUI(data.isSaved);
+            }
+        } catch (err) { console.error(err); }
+    }
+
+    function updateSaveUI(isSaved) {
+        const btn = document.getElementById('modalSaveBtn');
+        const icon = document.getElementById('modalSaveIcon');
+        if (isSaved) {
+            btn.className = "flex items-center gap-2 px-4 py-2 rounded-2xl font-bold border-2 border-blue-500 bg-blue-500 text-white transition-all";
+            icon.classList.add('fill-current');
+        } else {
+            btn.className = "flex items-center gap-2 px-4 py-2 rounded-2xl font-bold border-2 border-gray-100 text-gray-400 hover:border-blue-200 transition-all";
+            icon.classList.remove('fill-current');
+        }
+    }
+
+    // --- FOLLOW SYSTEM ---
+    function updateFollowButton(author) {
+        const placeholder = document.getElementById('followBtnPlaceholder');
+        if (!author || author._id === currentUserId) {
+            placeholder.innerHTML = '';
+            return;
+        }
+        const isFollowing = author.followers?.some(id => id.toString() === currentUserId);
+        placeholder.innerHTML = `
+            <button id="followBtn" onclick="toggleFollow('${author._id}')" 
+                class="px-4 py-1.5 rounded-full text-sm font-bold border-2 border-coral transition-all 
+                ${isFollowing ? 'bg-coral text-white' : 'text-coral hover:bg-coral hover:text-white'}">
+                ${isFollowing ? 'Following' : 'Follow'}
+            </button>`;
+    }
+
+    async function toggleFollow(targetUserId) {
+        const followBtn = document.getElementById('followBtn');
+        if (!currentUserId || !token) return alert("Please log in to follow chefs!");
+        followBtn.disabled = true;
+
+        try {
+            const response = await fetch(`https://pantry-pal-jur7.onrender.com/api/auth/follow/${targetUserId}`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                body: JSON.stringify({ currentUserId })
+            });
+            const data = await response.json();
+            if (response.ok) {
+                allRecipes.forEach(r => {
+                    if (r.author && (r.author._id || r.author).toString() === targetUserId) {
+                        r.author.followers = data.isFollowing ? [...(r.author.followers || []), currentUserId] : r.author.followers.filter(id => id.toString() !== currentUserId);
+                    }
+                });
+                updateFollowButton(allRecipes.find(r => r._id === activeRecipeId).author);
+            }
+        } catch (err) { console.error(err); } finally { followBtn.disabled = false; }
+    }
+
+    // --- COMMENT SYSTEM ---
     async function postComment() {
         const input = document.getElementById('commentInput');
         if (!input.value.trim() || !activeRecipeId) return;

@@ -2,7 +2,7 @@ const router = require('express').Router();
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const User = require('../models/User');
-const Recipe = require('../models/Recipe'); 
+const Recipe = require('../models/Recipe');
 
 // 1. Register Route
 router.post('/register', async (req, res) => {
@@ -36,7 +36,7 @@ router.post('/login', async (req, res) => {
 
 /**
  * 3. GET Profile Route
- * Returns the user data and dynamic counts for the profile page
+ * Returns user data + aggregated counts for the UI
  */
 router.get('/profile/:id', async (req, res) => {
   try {
@@ -59,6 +59,7 @@ router.get('/profile/:id', async (req, res) => {
 
 /**
  * 4. Update Profile Route
+ * FIX: Replaced { new: true } with { returnDocument: 'after' }
  */
 router.put('/profile/:id', async (req, res) => {
   try {
@@ -67,7 +68,7 @@ router.put('/profile/:id', async (req, res) => {
     const updatedUser = await User.findByIdAndUpdate(
       req.params.id,
       { username, bio, profilePic },
-      { new: true } 
+      { returnDocument: 'after' } 
     ).select('-password');
 
     if (!updatedUser) return res.status(404).json({ error: "User not found" });
@@ -88,37 +89,37 @@ router.put('/profile/:id', async (req, res) => {
 });
 
 /**
- * 5. ATOMIC Follow/Unfollow Toggle Route
- * Uses $addToSet and $pull for high reliability
+ * 5. TOGGLE Follow/Unfollow Route
+ * Consistently updates both the follower and the following list.
  */
 router.post('/follow/:id', async (req, res) => {
   try {
-    const targetUserId = req.params.id; // Person to follow
-    const { currentUserId } = req.body; // Logged in user
+    const targetUserId = req.params.id; // The Chef
+    const { currentUserId } = req.body; // The Logged-in User
 
     if (!currentUserId) return res.status(400).json({ error: "User ID required" });
-    if (targetUserId === currentUserId) return res.status(400).json({ error: "Self-following not allowed" });
+    if (targetUserId === currentUserId) return res.status(400).json({ error: "You cannot follow yourself" });
 
     const targetUser = await User.findById(targetUserId);
-    if (!targetUser) return res.status(404).json({ error: "Chef not found" });
+    if (!targetUser) return res.status(404).json({ error: "User not found" });
 
-    // Check current state using string comparison
+    // Check current state
     const isFollowing = targetUser.followers.some(id => id.toString() === currentUserId);
 
     if (isFollowing) {
-      // Unfollow: Remove IDs from both records
+      // UNFOLLOW logic
       await User.findByIdAndUpdate(targetUserId, { $pull: { followers: currentUserId } });
       await User.findByIdAndUpdate(currentUserId, { $pull: { following: targetUserId } });
       res.json({ message: "Unfollowed", isFollowing: false });
     } else {
-      // Follow: Add IDs to both records ($addToSet prevents duplicates)
+      // FOLLOW logic
       await User.findByIdAndUpdate(targetUserId, { $addToSet: { followers: currentUserId } });
       await User.findByIdAndUpdate(currentUserId, { $addToSet: { following: targetUserId } });
       res.json({ message: "Followed", isFollowing: true });
     }
   } catch (err) {
     console.error("Follow route error:", err);
-    res.status(500).json({ error: "Follow action failed" });
+    res.status(500).json({ error: "Server error during follow action" });
   }
 });
 
