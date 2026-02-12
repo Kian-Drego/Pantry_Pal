@@ -83,17 +83,18 @@ router.put('/profile/:id', async (req, res) => {
       followingCount
     });
   } catch (err) {
+    console.error(err);
     res.status(500).json({ error: "Failed to update profile" });
   }
 });
 
 /**
- * NEW: Follow/Unfollow Toggle Route
+ * FIXED: Follow/Unfollow Toggle Route
  */
 router.post('/follow/:id', async (req, res) => {
   try {
-    const targetUserId = req.params.id; // Person to be followed
-    const currentUserId = req.body.currentUserId; // The person logged in
+    const targetUserId = req.params.id; // The user to be followed
+    const { currentUserId } = req.body; // The logged-in user
 
     if (targetUserId === currentUserId) {
       return res.status(400).json({ error: "You cannot follow yourself" });
@@ -106,26 +107,30 @@ router.post('/follow/:id', async (req, res) => {
       return res.status(404).json({ error: "User not found" });
     }
 
-    // Check if the current user is already in the target user's followers list
-    const isFollowing = targetUser.followers.includes(currentUserId);
+    // FIX: Convert IDs to strings to ensure comparison works
+    const isFollowing = targetUser.followers.some(id => id.toString() === currentUserId);
 
     if (isFollowing) {
-      // Unfollow Logic
-      targetUser.followers.pull(currentUserId);
-      currentUser.following.pull(targetUserId);
+      // Unfollow Logic: Use filter to ensure specific string matching
+      targetUser.followers = targetUser.followers.filter(id => id.toString() !== currentUserId);
+      currentUser.following = currentUser.following.filter(id => id.toString() !== targetUserId);
+      
       await targetUser.save();
       await currentUser.save();
-      res.json({ message: "Unfollowed successfully", isFollowing: false });
+      
+      return res.json({ message: "Unfollowed successfully", isFollowing: false });
     } else {
-      // Follow Logic
+      // Follow Logic: Push strings
       targetUser.followers.push(currentUserId);
       currentUser.following.push(targetUserId);
+      
       await targetUser.save();
       await currentUser.save();
-      res.json({ message: "Followed successfully", isFollowing: true });
+      
+      return res.json({ message: "Followed successfully", isFollowing: true });
     }
   } catch (err) {
-    console.error(err);
+    console.error("Follow error:", err);
     res.status(500).json({ error: "Follow action failed" });
   }
 });
