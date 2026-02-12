@@ -114,7 +114,7 @@
             if (allRecipes.length === 0) {
                 statusDiv.innerHTML = `<h2 class="text-2xl brand-font text-gray-800">No recipes yet!</h2>`;
             } else {
-                statusDiv.remove();
+                if(statusDiv) statusDiv.remove();
                 renderFeed(allRecipes);
             }
         } catch (err) {
@@ -160,18 +160,12 @@
         document.getElementById('modalIngredients').innerHTML = (recipe.ingredients || []).map(i => `<li>${i}</li>`).join('');
         document.getElementById('modalInstructions').innerHTML = (recipe.instructions || []).map(s => `<li>${s}</li>`).join('');
         
-        // Likes UI Sync
+        // Update Likes/Saves UI
         const isLiked = recipe.likedBy?.some(id => (id._id || id).toString() === currentUserId);
         document.getElementById('modalLikeCount').innerText = recipe.likes || 0;
         updateLikeUI(isLiked);
-        document.getElementById('modalLikeBtn').onclick = () => toggleLike(recipe._id);
 
-        // Saves UI Sync
-        const isSaved = recipe.saves?.some(id => (id._id || id).toString() === currentUserId);
-        updateSaveUI(isSaved);
-        document.getElementById('modalSaveBtn').onclick = () => toggleSave(recipe._id);
-
-        // Load Comments
+        // Load existing comments from database
         renderComments(recipe.comments || []);
 
         document.getElementById('recipeModal').classList.remove('hidden');
@@ -179,35 +173,58 @@
         lucide.createIcons();
     }
 
-    // --- UPDATED SAVE FUNCTION ---
-    async function toggleSave(recipeId) {
-        try {
-            const res = await fetch(`https://pantry-pal-jur7.onrender.com/api/recipes/save/${recipeId}`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ userId: currentUserId })
-            });
-            const data = await res.json();
-            if (res.ok) {
-                const recipe = allRecipes.find(r => r._id === recipeId);
-                recipe.saves = data.saves; // Update local memory
-                updateSaveUI(data.isSaved);
-            }
-        } catch (err) { console.error("Save error:", err); }
-    }
+    /**
+     * POST COMMENT TO DATABASE
+     */
+    async function postComment() {
+        const input = document.getElementById('commentInput');
+        const text = input.value.trim();
+        const username = localStorage.getItem('username') || 'Chef';
 
-    function updateSaveUI(isSaved) {
-        const btn = document.getElementById('modalSaveBtn');
-        const icon = document.getElementById('modalSaveIcon');
-        if (isSaved) {
-            btn.className = "flex items-center gap-2 px-4 py-2 rounded-2xl font-bold border-2 border-blue-500 bg-blue-500 text-white transition-all";
-            icon.classList.add('fill-current');
-        } else {
-            btn.className = "flex items-center gap-2 px-4 py-2 rounded-2xl font-bold border-2 border-gray-100 text-gray-400 hover:border-blue-200 transition-all";
-            icon.classList.remove('fill-current');
+        if (!text || !activeRecipeId) return;
+
+        try {
+            const res = await fetch(`https://pantry-pal-jur7.onrender.com/api/recipes/comment/${activeRecipeId}`, {
+                method: 'POST',
+                headers: { 
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}` 
+                },
+                body: JSON.stringify({ userId: currentUserId, username, text })
+            });
+
+            const updatedComments = await res.json();
+            
+            if (res.ok) {
+                // Update Local Memory
+                const recipe = allRecipes.find(r => r._id === activeRecipeId);
+                recipe.comments = updatedComments;
+                
+                // Refresh UI
+                renderComments(updatedComments);
+                input.value = '';
+            }
+        } catch (err) {
+            console.error("Comment failed:", err);
+            alert("Could not post comment.");
         }
     }
 
+    function renderComments(comments) {
+        const container = document.getElementById('commentsContainer');
+        if (!comments || comments.length === 0) {
+            container.innerHTML = '<p class="text-gray-400 text-sm italic">No comments yet. Start the conversation!</p>';
+            return;
+        }
+        container.innerHTML = comments.map(c => `
+            <div class="bg-gray-50 p-4 rounded-2xl border border-gray-100">
+                <p class="text-xs font-bold text-coral mb-1">@${c.username}</p>
+                <p class="text-gray-700 text-sm">${c.text}</p>
+            </div>
+        `).join('');
+    }
+
+    // Liked UI logic
     async function toggleLike(recipeId) {
         try {
             const res = await fetch(`https://pantry-pal-jur7.onrender.com/api/recipes/like/${recipeId}`, {
@@ -239,46 +256,6 @@
         }
     }
 
-    // --- UPDATED COMMENT FUNCTION ---
-    async function postComment() {
-        const input = document.getElementById('commentInput');
-        const text = input.value.trim();
-        if (!text || !activeRecipeId) return;
-
-        try {
-            const res = await fetch(`https://pantry-pal-jur7.onrender.com/api/recipes/comment/${activeRecipeId}`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    userId: currentUserId,
-                    username: localStorage.getItem('username') || 'Chef',
-                    text: text
-                })
-            });
-            const comments = await res.json();
-            if (res.ok) {
-                const recipe = allRecipes.find(r => r._id === activeRecipeId);
-                recipe.comments = comments; // Update local memory
-                renderComments(comments);
-                input.value = '';
-            }
-        } catch (err) { console.error("Comment error:", err); }
-    }
-
-    function renderComments(comments) {
-        const container = document.getElementById('commentsContainer');
-        if (!comments || comments.length === 0) {
-            container.innerHTML = '<p class="text-gray-400 text-sm italic">No comments yet. Start the conversation!</p>';
-            return;
-        }
-        container.innerHTML = comments.map(c => `
-            <div class="bg-gray-50 p-4 rounded-2xl border border-gray-100">
-                <p class="text-xs font-bold text-coral mb-1">@${c.username}</p>
-                <p class="text-gray-700 text-sm">${c.text}</p>
-            </div>
-        `).join('');
-    }
-
     function handleLogout() {
         localStorage.clear();
         window.location.href = '../index.html';
@@ -290,6 +267,5 @@
     }
 
     window.onload = fetchRecipes;
-</script>
-</body>
+</script></body>
 </html>
