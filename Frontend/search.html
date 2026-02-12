@@ -14,14 +14,12 @@
         .bg-coral { background-color: #E97D5B; }
         .sidebar-item:hover { color: #E97D5B; }
         
-        /* Smooth transitions for search results */
         .search-result-animate { animation: fadeIn 0.3s ease-out; }
         @keyframes fadeIn {
             from { opacity: 0; transform: translateY(10px); }
             to { opacity: 1; transform: translateY(0); }
         }
 
-        /* Prevent iOS Zoom */
         @media screen and (max-width: 768px) {
             input { font-size: 16px !important; }
         }
@@ -56,7 +54,6 @@
     </nav>
 
     <main class="md:ml-72 flex-grow p-5 md:p-12 bg-white min-h-screen pb-28 md:pb-12">
-        
         <div class="relative w-full max-w-5xl group mt-2 md:mt-0">
             <i data-lucide="search" class="absolute left-6 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-coral transition-colors w-5 h-5"></i>
             <input type="text" id="searchInput" oninput="handleSearch()" placeholder="Search lasagna, pasta, or chefs..." 
@@ -64,31 +61,46 @@
         </div>
 
         <div class="mt-6 md:mt-8 p-1.5 bg-gray-50 rounded-[1.5rem] md:rounded-2xl flex w-full max-w-5xl border border-gray-100">
-            <button id="recipeBtn" onclick="setTab('recipes')" class="flex-1 py-2.5 md:py-3 rounded-[1.25rem] md:rounded-xl font-bold transition-all bg-white shadow-sm text-gray-900">
-                Recipes
-            </button>
-            <button id="chefBtn" onclick="setTab('chefs')" class="flex-1 py-2.5 md:py-3 rounded-[1.25rem] md:rounded-xl font-bold transition-all text-gray-400">
-                Chefs
-            </button>
+            <button id="recipeBtn" onclick="setTab('recipes')" class="flex-1 py-2.5 md:py-3 rounded-[1.25rem] md:rounded-xl font-bold transition-all bg-white shadow-sm text-gray-900">Recipes</button>
+            <button id="chefBtn" onclick="setTab('chefs')" class="flex-1 py-2.5 md:py-3 rounded-[1.25rem] md:rounded-xl font-bold transition-all text-gray-400">Chefs</button>
         </div>
 
-        <div id="resultsGrid" class="mt-8 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            </div>
+        <div id="resultsGrid" class="mt-8 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6"></div>
 
         <div id="searchPlaceholder" class="mt-20 md:mt-32 flex flex-col items-center justify-center text-center px-4">
             <div class="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center mb-6">
                  <i data-lucide="search" class="text-gray-300 w-8 h-8"></i>
             </div>
-            <p class="text-lg md:text-xl text-gray-400 font-medium tracking-wide max-w-xs md:max-w-none">
-                Type something to find tasty recipes or master chefs!
-            </p>
+            <p class="text-lg md:text-xl text-gray-400 font-medium tracking-wide max-w-xs md:max-w-none">Type something to find tasty recipes or master chefs!</p>
         </div>
-
     </main>
+
+    <div id="recipeModal" class="fixed inset-0 z-[150] hidden overflow-y-auto">
+        <div class="absolute inset-0 bg-gray-900/60 backdrop-blur-sm" onclick="closeRecipeModal()"></div>
+        <div class="relative bg-white w-full md:w-[95%] md:max-w-2xl mx-auto mt-10 md:mt-20 rounded-[40px] shadow-2xl overflow-hidden mb-10">
+            <img id="modalImage" class="w-full h-64 md:h-80 object-cover">
+            <button onclick="closeRecipeModal()" class="absolute top-5 right-5 p-3 bg-black/20 text-white rounded-full"><i data-lucide="x"></i></button>
+            <div class="p-8">
+                <h2 id="modalTitle" class="text-3xl brand-font text-gray-900 mb-2"></h2>
+                <p id="modalAuthor" class="text-coral font-bold mb-6"></p>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    <div>
+                        <h3 class="font-bold text-coral mb-3">Ingredients</h3>
+                        <ul id="modalIngredients" class="text-sm space-y-1 text-gray-600 list-disc ml-4"></ul>
+                    </div>
+                    <div>
+                        <h3 class="font-bold text-coral mb-3">Steps</h3>
+                        <ol id="modalInstructions" class="text-sm space-y-1 text-gray-600 list-decimal ml-4"></ol>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <script>
         let currentTab = 'recipes';
         let searchTimeout;
+        let allResults = [];
 
         async function handleSearch() {
             const query = document.getElementById('searchInput').value.trim();
@@ -108,43 +120,48 @@
             clearTimeout(searchTimeout);
             searchTimeout = setTimeout(async () => {
                 try {
-                    // We call your search API (Recipes search is already in your recipes.js)
+                    // Optimized: Recipes endpoint for names, generic endpoint for gathering chefs
                     const endpoint = currentTab === 'recipes' 
                         ? `https://pantry-pal-jur7.onrender.com/api/recipes/search?q=${query}`
-                        : `https://pantry-pal-jur7.onrender.com/api/recipes`; // For chefs, we'll filter globally
+                        : `https://pantry-pal-jur7.onrender.com/api/recipes`;
 
                     const response = await fetch(endpoint);
-                    const data = await response.json();
+                    allResults = await response.json();
 
-                    renderResults(data, query);
+                    renderResults(allResults, query);
                 } catch (err) {
-                    console.error(err);
+                    console.error("Search failed:", err);
+                    grid.innerHTML = `<p class="col-span-full text-center text-red-400">Error connecting to kitchen server.</p>`;
                 }
-            }, 400); // Debounce
+            }, 400);
         }
 
         function renderResults(data, query) {
             const grid = document.getElementById('resultsGrid');
+            grid.innerHTML = '';
             
             if (currentTab === 'recipes') {
                 if (data.length === 0) {
-                    grid.innerHTML = `<p class="col-span-full text-center py-10 text-gray-400">No recipes found for "${query}"</p>`;
+                    grid.innerHTML = `<p class="col-span-full text-center py-10 text-gray-400">No dishes named "${query}" found.</p>`;
                     return;
                 }
                 grid.innerHTML = data.map(r => `
-                    <div onclick="location.href='homepage.html'" class="bg-white rounded-3xl border border-gray-100 overflow-hidden shadow-sm hover:shadow-md transition-all cursor-pointer search-result-animate">
-                        <img src="${r.image || '../default.png'}" class="w-full h-48 object-cover">
-                        <div class="p-5">
+                    <div onclick="openRecipeModal('${r._id}')" class="bg-white rounded-[2.5rem] border border-gray-100 overflow-hidden shadow-sm hover:shadow-md active:scale-95 transition-all cursor-pointer search-result-animate group">
+                        <div class="h-48 overflow-hidden">
+                            <img src="${r.image || '../default.png'}" class="w-full h-full object-cover group-hover:scale-105 transition-transform">
+                        </div>
+                        <div class="p-6">
                             <h3 class="font-bold text-gray-900 truncate">${r.title}</h3>
                             <p class="text-coral font-bold text-xs mt-2">@${r.author?.username || 'chef'}</p>
                         </div>
                     </div>
                 `).join('');
             } else {
-                // Chef Search Mode (Filtering unique authors from recipes)
+                // Chef Search: Extract unique authors and filter by their username (@tag)
                 const uniqueChefs = [];
                 const chefNames = new Set();
                 
+                // Your backend stores author objects inside recipes, so we extract them here
                 data.forEach(r => {
                     const chef = r.author;
                     if (chef && !chefNames.has(chef.username) && chef.username.toLowerCase().includes(query.toLowerCase())) {
@@ -154,24 +171,44 @@
                 });
 
                 if (uniqueChefs.length === 0) {
-                    grid.innerHTML = `<p class="col-span-full text-center py-10 text-gray-400">No chefs found matching "${query}"</p>`;
+                    grid.innerHTML = `<p class="col-span-full text-center py-10 text-gray-400">No chefs found with tag "@${query}"</p>`;
                     return;
                 }
 
                 grid.innerHTML = uniqueChefs.map(chef => `
-                    <div class="flex items-center gap-4 p-5 bg-white rounded-3xl border border-gray-100 shadow-sm search-result-animate">
+                    <div class="flex items-center gap-4 p-5 bg-white rounded-[2rem] border border-gray-100 shadow-sm search-result-animate">
                         <div class="w-14 h-14 rounded-full bg-orange-100 flex items-center justify-center text-coral overflow-hidden">
                             ${chef.profilePic ? `<img src="${chef.profilePic}" class="w-full h-full object-cover">` : `<i data-lucide="user"></i>`}
                         </div>
                         <div class="flex-grow">
-                            <h3 class="font-bold text-gray-900">@${chef.username}</h3>
-                            <p class="text-xs text-gray-400">Master Chef</p>
+                            <h3 class="font-bold text-gray-900 leading-none">@${chef.username}</h3>
+                            <p class="text-[10px] text-coral font-black uppercase mt-1 tracking-widest">Verified Chef</p>
                         </div>
-                        <button onclick="location.href='profilepage.html'" class="text-coral font-bold text-xs bg-orange-50 px-4 py-2 rounded-xl">View</button>
+                        <button onclick="window.location.href='profilepage.html'" class="text-white font-bold text-xs bg-coral px-4 py-2.5 rounded-xl shadow-md shadow-orange-100 active:scale-90 transition-all">Profile</button>
                     </div>
                 `).join('');
             }
             lucide.createIcons();
+        }
+
+        function openRecipeModal(id) {
+            const recipe = allResults.find(r => r._id === id);
+            if (!recipe) return;
+
+            document.getElementById('modalImage').src = recipe.image || '../default.png';
+            document.getElementById('modalTitle').innerText = recipe.title;
+            document.getElementById('modalAuthor').innerText = `@${recipe.author?.username || 'chef'}`;
+            document.getElementById('modalIngredients').innerHTML = (recipe.ingredients || []).map(i => `<li>${i}</li>`).join('');
+            document.getElementById('modalInstructions').innerHTML = (recipe.instructions || []).map(s => `<li>${s}</li>`).join('');
+            
+            document.getElementById('recipeModal').classList.remove('hidden');
+            document.body.style.overflow = 'hidden';
+            lucide.createIcons();
+        }
+
+        function closeRecipeModal() {
+            document.getElementById('recipeModal').classList.add('hidden');
+            document.body.style.overflow = 'auto';
         }
 
         function setTab(type) {
@@ -180,17 +217,15 @@
             const chefBtn = document.getElementById('chefBtn');
 
             if (type === 'recipes') {
-                recipeBtn.classList.add('bg-white', 'shadow-sm', 'text-gray-900');
-                recipeBtn.classList.remove('text-gray-400');
-                chefBtn.classList.remove('bg-white', 'shadow-sm', 'text-gray-900');
-                chefBtn.classList.add('text-gray-400');
+                recipeBtn.className = "flex-1 py-3 rounded-xl font-bold transition-all bg-white shadow-sm text-gray-900";
+                chefBtn.className = "flex-1 py-3 rounded-xl font-bold transition-all text-gray-400";
+                document.getElementById('searchInput').placeholder = "Search lasagna, pasta, or dishes...";
             } else {
-                chefBtn.classList.add('bg-white', 'shadow-sm', 'text-gray-900');
-                chefBtn.classList.remove('text-gray-400');
-                recipeBtn.classList.remove('bg-white', 'shadow-sm', 'text-gray-900');
-                recipeBtn.classList.add('text-gray-400');
+                chefBtn.className = "flex-1 py-3 rounded-xl font-bold transition-all bg-white shadow-sm text-gray-900";
+                recipeBtn.className = "flex-1 py-3 rounded-xl font-bold transition-all text-gray-400";
+                document.getElementById('searchInput').placeholder = "Search chefs by @username...";
             }
-            handleSearch(); // Refresh search with new tab
+            handleSearch(); 
         }
 
         function handleLogout() {
