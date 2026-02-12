@@ -114,7 +114,7 @@
             }
 
             container.innerHTML = recipes.map(recipe => {
-                const recipeImage = recipe.image || 'https://via.placeholder.com/400x300?text=Delicious+Food';
+                const recipeImage = recipe.image || '../default.png';
                 return `
                     <div onclick="openRecipeModal('${recipe._id}')" class="bg-white rounded-[2.5rem] border border-gray-100 overflow-hidden shadow-sm hover:shadow-xl transition-all cursor-pointer group">
                         <div class="relative h-64 overflow-hidden">
@@ -141,7 +141,7 @@
             const recipe = allRecipes.find(r => r._id === recipeId);
             if (!recipe) return;
 
-            document.getElementById('modalImage').src = recipe.image || 'https://via.placeholder.com/600';
+            document.getElementById('modalImage').src = recipe.image || '../default.png';
             document.getElementById('modalTitle').innerText = recipe.title;
             document.getElementById('modalAuthor').innerText = `@${recipe.author?.username || 'chef'}`;
             document.getElementById('modalDescription').innerText = recipe.description;
