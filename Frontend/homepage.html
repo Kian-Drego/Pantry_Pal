@@ -14,20 +14,26 @@
         .bg-coral { background-color: #E97D5B; }
         .sidebar-item:hover { color: #E97D5B; }
         
-        /* Smooth modal for mobile */
         .modal-animate { animation: modalIn 0.25s cubic-bezier(0.4, 0, 0.2, 1); }
         @keyframes modalIn {
             from { opacity: 0; transform: translate(-50%, -45%) scale(0.95); }
             to { opacity: 1; transform: translate(-50%, -50%) scale(1); }
         }
 
-        /* Hide scrollbar for cleaner look */
+        @media (max-width: 768px) {
+            .modal-animate { animation: mobileModalIn 0.3s ease-out; }
+            @keyframes mobileModalIn {
+                from { transform: translateY(100%); }
+                to { transform: translateY(0); }
+            }
+        }
+
         ::-webkit-scrollbar { width: 0px; background: transparent; }
     </style>
 </head>
 <body class="bg-gray-50 flex flex-col md:flex-row min-h-screen">
 
-    <aside class="hidden md:flex w-72 bg-white border-r border-gray-100 flex-col p-8 fixed h-full z-10">
+    <aside class="hidden md:flex w-72 bg-white border-r border-gray-100 flex flex-col p-8 fixed h-full z-10">
         <div class="text-3xl brand-font text-coral mb-12">PantryPal</div>
         <nav class="space-y-6 flex-grow">
             <a href="homepage.html" class="flex items-center gap-4 bg-coral text-white px-5 py-4 rounded-2xl font-semibold shadow-lg shadow-orange-100"><i data-lucide="home"></i> Home</a>
@@ -201,12 +207,11 @@
         lucide.createIcons();
     }
 
-    // --- LIKE SYSTEM ---
     async function toggleLike(recipeId) {
         try {
             const res = await fetch(`https://pantry-pal-jur7.onrender.com/api/recipes/like/${recipeId}`, {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
                 body: JSON.stringify({ userId: currentUserId })
             });
             const data = await res.json();
@@ -233,7 +238,6 @@
         }
     }
 
-    // --- SAVE SYSTEM ---
     async function toggleSave(recipeId) {
         try {
             const res = await fetch(`https://pantry-pal-jur7.onrender.com/api/recipes/save/${recipeId}`, {
@@ -262,7 +266,6 @@
         }
     }
 
-    // --- FOLLOW SYSTEM ---
     function updateFollowButton(author) {
         const placeholder = document.getElementById('followBtnPlaceholder');
         if (!author || (author._id || author).toString() === currentUserId) {
@@ -281,6 +284,7 @@
 
     async function toggleFollow(targetUserId) {
         const followBtn = document.getElementById('followBtn');
+        if (!followBtn) return;
         followBtn.disabled = true;
         try {
             const response = await fetch(`https://pantry-pal-jur7.onrender.com/api/auth/follow/${targetUserId}`, {
@@ -301,10 +305,10 @@
                         }
                     }
                 });
-                const updatedAuthor = allRecipes.find(r => (r.author?._id || r.author).toString() === targetUserId).author;
-                updateFollowButton(updatedAuthor);
+                const currentRecipeAuthor = allRecipes.find(r => r._id === activeRecipeId).author;
+                updateFollowButton(currentRecipeAuthor);
             }
-        } catch (err) { console.error(err); } finally { followBtn.disabled = false; }
+        } catch (err) { console.error(err); } finally { if(followBtn) followBtn.disabled = false; }
     }
 
     async function postComment() {

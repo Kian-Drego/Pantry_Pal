@@ -36,7 +36,6 @@ router.post('/login', async (req, res) => {
 
 /**
  * 3. GET Profile Route
- * Returns user data + aggregated counts for the UI
  */
 router.get('/profile/:id', async (req, res) => {
   try {
@@ -59,7 +58,6 @@ router.get('/profile/:id', async (req, res) => {
 
 /**
  * 4. Update Profile Route
- * FIX: Replaced { new: true } with { returnDocument: 'after' }
  */
 router.put('/profile/:id', async (req, res) => {
   try {
@@ -90,12 +88,12 @@ router.put('/profile/:id', async (req, res) => {
 
 /**
  * 5. TOGGLE Follow/Unfollow Route
- * Consistently updates both the follower and the following list.
+ * This single route handles both following and unfollowing.
  */
 router.post('/follow/:id', async (req, res) => {
   try {
-    const targetUserId = req.params.id; // The Chef
-    const { currentUserId } = req.body; // The Logged-in User
+    const targetUserId = req.params.id; // Chef being followed
+    const { currentUserId } = req.body; // Logged in user
 
     if (!currentUserId) return res.status(400).json({ error: "User ID required" });
     if (targetUserId === currentUserId) return res.status(400).json({ error: "You cannot follow yourself" });
@@ -103,47 +101,24 @@ router.post('/follow/:id', async (req, res) => {
     const targetUser = await User.findById(targetUserId);
     if (!targetUser) return res.status(404).json({ error: "User not found" });
 
-    // Check current state
+    // Ensure we check IDs as strings to avoid Type mismatch bugs
     const isFollowing = targetUser.followers.some(id => id.toString() === currentUserId);
 
     if (isFollowing) {
       // UNFOLLOW logic
       await User.findByIdAndUpdate(targetUserId, { $pull: { followers: currentUserId } });
       await User.findByIdAndUpdate(currentUserId, { $pull: { following: targetUserId } });
-      res.json({ message: "Unfollowed", isFollowing: false });
+      res.json({ success: true, message: "Unfollowed", isFollowing: false });
     } else {
       // FOLLOW logic
       await User.findByIdAndUpdate(targetUserId, { $addToSet: { followers: currentUserId } });
       await User.findByIdAndUpdate(currentUserId, { $addToSet: { following: targetUserId } });
-      res.json({ message: "Followed", isFollowing: true });
+      res.json({ success: true, message: "Followed", isFollowing: true });
     }
   } catch (err) {
     console.error("Follow route error:", err);
-    res.status(500).json({ error: "Server error during follow action" });
+    res.status(500).json({ success: false, error: "Server error during follow action" });
   }
 });
-router.post('/follow/:id', async (req, res) => {
-  try {
-    const targetUserId = req.params.id; // The person being followed
-    const { currentUserId } = req.body; // You
 
-    const targetUser = await User.findById(targetUserId);
-    const isFollowing = targetUser.followers.includes(currentUserId);
-
-    const updateTarget = isFollowing 
-      ? { $pull: { followers: currentUserId } } 
-      : { $addToSet: { followers: currentUserId } };
-
-    const updateMe = isFollowing 
-      ? { $pull: { following: targetUserId } } 
-      : { $addToSet: { following: targetUserId } };
-
-    await User.findByIdAndUpdate(targetUserId, updateTarget);
-    await User.findByIdAndUpdate(currentUserId, updateMe);
-
-    res.json({ success: true, isFollowing: !isFollowing });
-  } catch (err) {
-    res.status(500).json({ success: false });
-  }
-});
 module.exports = router;
