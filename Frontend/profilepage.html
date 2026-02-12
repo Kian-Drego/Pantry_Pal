@@ -97,10 +97,7 @@
                 <button onclick="closeRecipeView()" class="absolute top-4 right-4 p-2 bg-white/90 rounded-full shadow-lg"><i data-lucide="x" class="w-6 h-6"></i></button>
             </div>
             <div class="p-8 overflow-y-auto">
-                <div class="flex justify-between items-start mb-4">
-                    <h2 id="modalTitle" class="text-3xl brand-font text-gray-900"></h2>
-                    <button id="modalCloseBtn" onclick="closeRecipeView()" class="hidden p-2 bg-gray-100 rounded-full"><i data-lucide="x" class="w-5 h-5"></i></button>
-                </div>
+                <h2 id="modalTitle" class="text-3xl brand-font text-gray-900 mb-4"></h2>
                 <p id="modalDescription" class="text-gray-500 mb-8"></p>
                 <div class="grid md:grid-cols-2 gap-8">
                     <div><h3 class="font-bold mb-4 text-coral">Ingredients</h3><ul id="modalIngredients" class="list-disc ml-5 space-y-1 text-gray-600"></ul></div>
@@ -157,11 +154,12 @@
                 }
 
                 grid.innerHTML = myRecipes.map(r => {
-                    const imageHTML = r.image ? `<img src="${r.image}" class="w-full h-48 object-cover">` : '';
+                    // Always show image, use default if none provided
+                    const recipeImage = r.image || "../default.png";
                     return `
                         <div class="group relative bg-white rounded-3xl overflow-hidden border border-gray-100 shadow-sm hover:shadow-md cursor-pointer transition-all">
                             <div onclick="openRecipeView('${r._id}')">
-                                ${imageHTML}
+                                <img src="${recipeImage}" class="w-full h-48 object-cover">
                                 <div class="p-5">
                                     <h3 class="font-bold mb-1">${r.title}</h3>
                                     <p class="text-sm text-gray-500 line-clamp-2">${r.description}</p>
@@ -180,16 +178,10 @@
         function openRecipeView(id) {
             const recipe = myRecipes.find(r => r._id === id);
             const modalImgContainer = document.getElementById('modalImageContainer');
-            const modalCloseBtn = document.getElementById('modalCloseBtn');
-
-            if (recipe.image) {
-                document.getElementById('modalImage').src = recipe.image;
-                modalImgContainer.classList.remove('hidden');
-                modalCloseBtn.classList.add('hidden');
-            } else {
-                modalImgContainer.classList.add('hidden');
-                modalCloseBtn.classList.remove('hidden');
-            }
+            
+            // Revert: always show image container and use default if needed
+            modalImgContainer.classList.remove('hidden');
+            document.getElementById('modalImage').src = recipe.image || 'https://via.placeholder.com/600';
 
             document.getElementById('modalTitle').innerText = recipe.title;
             document.getElementById('modalDescription').innerText = recipe.description;
