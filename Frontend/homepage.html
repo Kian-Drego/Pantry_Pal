@@ -40,14 +40,6 @@
         </div>
     </aside>
 
-    <nav class="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-100 flex justify-around items-center p-4 z-50 shadow-[0_-5px_20px_rgba(0,0,0,0.03)]">
-        <a href="homepage.html" class="mobile-nav-active"><i data-lucide="home"></i></a>
-        <a href="search.html" class="text-gray-400"><i data-lucide="search"></i></a>
-        <a href="create.html" class="text-gray-400"><i data-lucide="plus-square"></i></a>
-        <a href="leaderboard.html" class="text-gray-400"><i data-lucide="trophy"></i></a>
-        <a href="profilepage.html" class="text-gray-400"><i data-lucide="user"></i></a>
-    </nav>
-
     <main class="md:ml-72 flex-grow p-6 md:p-12 bg-white min-h-screen pb-24 md:pb-12">
         <header class="mb-8 md:mb-10 text-center md:text-left">
             <h1 class="text-4xl md:text-5xl brand-font text-coral mb-2">Fresh Feed</h1>
@@ -74,7 +66,10 @@
             <div class="p-8 overflow-y-auto">
                 <div class="flex justify-between items-start mb-4">
                     <h2 id="modalTitle" class="text-3xl brand-font text-gray-900"></h2>
-                    <button id="modalCloseBtn" onclick="closeRecipeModal()" class="hidden p-2 bg-gray-100 rounded-full"><i data-lucide="x" class="w-5 h-5"></i></button>
+                    <button id="modalLikeBtn" onclick="" class="flex items-center gap-2 px-5 py-2.5 rounded-2xl font-bold border-2 transition-all">
+                        <i data-lucide="heart" id="modalLikeIcon" class="w-5 h-5"></i>
+                        <span id="modalLikeCount">0</span>
+                    </button>
                 </div>
                 <div id="modalAuthorContainer" class="flex items-center gap-4 mb-6">
                     <p id="modalAuthor" class="text-coral font-bold"></p>
@@ -115,6 +110,7 @@
 
             container.innerHTML = recipes.map(recipe => {
                 const recipeImage = recipe.image || '../default.png';
+                const isLiked = recipe.likedBy?.includes(currentUserId);
                 return `
                     <div onclick="openRecipeModal('${recipe._id}')" class="bg-white rounded-[2.5rem] border border-gray-100 overflow-hidden shadow-sm hover:shadow-xl transition-all cursor-pointer group">
                         <div class="relative h-64 overflow-hidden">
@@ -125,8 +121,8 @@
                             <p class="text-gray-500 text-sm line-clamp-2 mb-4">${recipe.description}</p>
                             <div class="flex items-center justify-between pt-4 border-t border-gray-50">
                                 <span class="text-coral font-bold text-sm">@${recipe.author?.username || 'chef'}</span>
-                                <div class="flex items-center gap-1 text-gray-400">
-                                    <i data-lucide="heart" class="w-4 h-4"></i>
+                                <div class="flex items-center gap-1 ${isLiked ? 'text-red-500' : 'text-gray-400'}">
+                                    <i data-lucide="heart" class="w-4 h-4 ${isLiked ? 'fill-current' : ''}"></i>
                                     <span class="text-xs font-bold">${recipe.likes || 0}</span>
                                 </div>
                             </div>
@@ -147,14 +143,25 @@
             document.getElementById('modalDescription').innerText = recipe.description;
             document.getElementById('modalIngredients').innerHTML = recipe.ingredients.map(i => `<li>${i}</li>`).join('');
             document.getElementById('modalInstructions').innerHTML = recipe.instructions.map(s => `<li>${s}</li>`).join('');
+            
+            // Like Button State
+            const isLiked = recipe.likedBy?.includes(currentUserId);
+            const likeBtn = document.getElementById('modalLikeBtn');
+            const likeIcon = document.getElementById('modalLikeIcon');
+            document.getElementById('modalLikeCount').innerText = recipe.likes || 0;
+            
+            updateLikeUI(isLiked);
+            likeBtn.onclick = (e) => { e.stopPropagation(); toggleLike(recipe._id); };
 
-            // Follow Button Logic
+            // Follow Button State
             const followPlaceholder = document.getElementById('followBtnPlaceholder');
             if (recipe.author && recipe.author._id !== currentUserId) {
+                const isFollowing = recipe.author.followers?.includes(currentUserId);
                 followPlaceholder.innerHTML = `
                     <button id="followBtn" onclick="toggleFollow('${recipe.author._id}')" 
-                        class="px-4 py-1.5 rounded-full text-sm font-bold border-2 border-coral text-coral hover:bg-coral hover:text-white transition-all">
-                        Follow
+                        class="px-4 py-1.5 rounded-full text-sm font-bold border-2 border-coral transition-all 
+                        ${isFollowing ? 'bg-coral text-white' : 'text-coral hover:bg-coral hover:text-white'}">
+                        ${isFollowing ? 'Following' : 'Follow'}
                     </button>
                 `;
             } else {
@@ -166,14 +173,41 @@
             lucide.createIcons();
         }
 
-        async function toggleFollow(targetUserId) {
-            if (!currentUserId || !token) {
-                alert("Please log in to follow chefs!");
-                return;
-            }
+        async function toggleLike(recipeId) {
+            if (!currentUserId) return alert("Login to like recipes!");
+            try {
+                const response = await fetch(`https://pantry-pal-jur7.onrender.com/api/recipes/like/${recipeId}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ userId: currentUserId })
+                });
+                const data = await response.json();
+                if (response.ok) {
+                    const recipe = allRecipes.find(r => r._id === recipeId);
+                    recipe.likes = data.likes;
+                    recipe.likedBy = data.likedBy;
+                    document.getElementById('modalLikeCount').innerText = data.likes;
+                    updateLikeUI(data.isLiked);
+                    renderFeed(allRecipes); // Refresh background feed
+                }
+            } catch (err) { console.error(err); }
+        }
 
+        function updateLikeUI(isLiked) {
+            const likeBtn = document.getElementById('modalLikeBtn');
+            const likeIcon = document.getElementById('modalLikeIcon');
+            if (isLiked) {
+                likeBtn.className = "flex items-center gap-2 px-5 py-2.5 rounded-2xl font-bold border-2 border-red-500 bg-red-500 text-white transition-all";
+                likeIcon.classList.add('fill-current');
+            } else {
+                likeBtn.className = "flex items-center gap-2 px-5 py-2.5 rounded-2xl font-bold border-2 border-gray-100 text-gray-400 hover:border-red-200 transition-all";
+                likeIcon.classList.remove('fill-current');
+            }
+        }
+
+        async function toggleFollow(targetUserId) {
+            if (!currentUserId || !token) return alert("Login to follow!");
             const followBtn = document.getElementById('followBtn');
-            
             try {
                 const response = await fetch(`https://pantry-pal-jur7.onrender.com/api/auth/follow/${targetUserId}`, {
                     method: 'POST',
@@ -183,20 +217,17 @@
                     },
                     body: JSON.stringify({ currentUserId })
                 });
-
                 const data = await response.json();
                 if (response.ok) {
                     if (data.isFollowing) {
                         followBtn.innerText = "Following";
-                        followBtn.classList.add('bg-coral', 'text-white');
+                        followBtn.className = "px-4 py-1.5 rounded-full text-sm font-bold border-2 border-coral bg-coral text-white transition-all";
                     } else {
                         followBtn.innerText = "Follow";
-                        followBtn.classList.remove('bg-coral', 'text-white');
+                        followBtn.className = "px-4 py-1.5 rounded-full text-sm font-bold border-2 border-coral text-coral hover:bg-coral hover:text-white transition-all";
                     }
                 }
-            } catch (err) {
-                console.error("Follow error:", err);
-            }
+            } catch (err) { console.error(err); }
         }
 
         function closeRecipeModal() {
