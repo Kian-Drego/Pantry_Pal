@@ -181,7 +181,7 @@
             
             // Revert: always show image container and use default if needed
             modalImgContainer.classList.remove('hidden');
-            document.getElementById('modalImage').src = recipe.image || 'https://via.placeholder.com/600';
+            document.getElementById('modalImage').src = recipe.image || '../default.png';
 
             document.getElementById('modalTitle').innerText = recipe.title;
             document.getElementById('modalDescription').innerText = recipe.description;
