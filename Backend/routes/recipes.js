@@ -4,12 +4,13 @@ const User = require('../models/User');
 
 /**
  * 1. Get all recipes (Homepage Feed)
+ * CRITICAL FIX: Added 'followers' to the populate method
  */
 router.get('/', async (req, res) => {
   try {
     const recipes = await Recipe.find()
       .sort({ createdAt: -1 }) 
-      .populate('author', 'username profilePic');
+      .populate('author', 'username profilePic followers'); // Added followers here
     res.json(recipes);
   } catch (err) {
     res.status(500).json({ error: "Could not fetch recipes" });
@@ -44,7 +45,6 @@ router.post('/like/:id', async (req, res) => {
     const recipe = await Recipe.findById(req.params.id);
     if (!recipe) return res.status(404).json({ error: "Not found" });
 
-    // Ensure array exists for legacy data
     const likedBy = recipe.likedBy || [];
     const alreadyLiked = likedBy.some(id => id.toString() === userId);
 
@@ -52,7 +52,6 @@ router.post('/like/:id', async (req, res) => {
       ? { $pull: { likedBy: userId }, $inc: { likes: -1 } }
       : { $addToSet: { likedBy: userId }, $inc: { likes: 1 } };
 
-    // FIX: Using returnDocument instead of new
     const updated = await Recipe.findByIdAndUpdate(req.params.id, update, { returnDocument: 'after' });
     
     res.json({ 
@@ -74,7 +73,6 @@ router.post('/save/:id', async (req, res) => {
     const recipe = await Recipe.findById(req.params.id);
     if (!recipe) return res.status(404).json({ error: "Not found" });
 
-    // Ensure array exists
     const saves = recipe.saves || [];
     const isSaved = saves.some(id => id.toString() === userId);
 
@@ -82,7 +80,6 @@ router.post('/save/:id', async (req, res) => {
       ? { $pull: { saves: userId } } 
       : { $addToSet: { saves: userId } };
 
-    // FIX: Using returnDocument instead of new
     const updated = await Recipe.findByIdAndUpdate(req.params.id, update, { returnDocument: 'after' });
     
     res.json({ saves: updated.saves, isSaved: !isSaved });
@@ -99,7 +96,6 @@ router.post('/comment/:id', async (req, res) => {
     const { userId, username, text } = req.body;
     if (!text) return res.status(400).json({ error: "Comment text required" });
 
-    // FIX: Using returnDocument instead of new
     const updatedRecipe = await Recipe.findByIdAndUpdate(
       req.params.id,
       { $push: { comments: { userId, username, text } } },
@@ -124,7 +120,7 @@ router.get('/search', async (req, res) => {
         { title: { $regex: q, $options: 'i' } }, 
         { ingredients: { $regex: q, $options: 'i' } }
       ]
-    }).populate('author', 'username');
+    }).populate('author', 'username profilePic followers'); // Populate followers here too
     res.json(results);
   } catch (err) {
     res.status(500).json({ error: "Search failed" });
@@ -142,7 +138,10 @@ router.delete('/:id', async (req, res) => {
     res.status(500).json({ error: "Delete failed" });
   }
 });
-// Add this to Backend/routes/recipes.js
+
+/**
+ * 8. Update recipe
+ */
 router.put('/:id', async (req, res) => {
   try {
     const updatedRecipe = await Recipe.findByIdAndUpdate(
@@ -155,4 +154,5 @@ router.put('/:id', async (req, res) => {
     res.status(500).json({ error: "Update failed" });
   }
 });
+
 module.exports = router;

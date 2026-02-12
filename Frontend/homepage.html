@@ -189,7 +189,7 @@
         updateLikeUI(recipe.likedBy?.some(id => id.toString() === currentUserId));
         updateSaveUI(recipe.saves?.some(id => id.toString() === currentUserId));
         
-        // Initial Follow State
+        // Initial Follow State using freshly populated 'followers' array from backend
         const isFollowingStatus = recipe.author?.followers?.some(id => id.toString() === currentUserId);
         updateFollowUI(isFollowingStatus);
 
@@ -200,7 +200,7 @@
         lucide.createIcons();
     }
 
-    // --- CONSOLIDATED FOLLOW SYSTEM ---
+    // --- FINAL SYNCED FOLLOW SYSTEM ---
     function updateFollowUI(isFollowing) {
         const placeholder = document.getElementById('followBtnPlaceholder');
         const recipe = allRecipes.find(r => r._id === activeRecipeId);
@@ -220,31 +220,32 @@
 
     async function toggleFollowChef(targetUserId) {
         const btn = document.getElementById('modalFollowBtn');
-        if (!token) return alert("Please login to follow chefs!");
+        if (!token) return alert("Login to follow!");
         btn.disabled = true;
+
         try {
-            const res = await fetch(`https://pantry-pal-jur7.onrender.com/api/auth/follow/${targetUserId}`, {
+            const response = await fetch(`https://pantry-pal-jur7.onrender.com/api/auth/follow/${targetUserId}`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
                 body: JSON.stringify({ currentUserId })
             });
-            const data = await res.json();
+            const data = await response.json();
+
             if (data.success) {
-                // UPDATE LOCAL ALLRECIPES ARRAY SO STATE "STICKS"
+                // Sync the local memory store across all posts by this chef
                 allRecipes.forEach(r => {
                     const rAuthId = (r.author?._id || r.author).toString();
                     if (rAuthId === targetUserId) {
-                        if (!r.author.followers) r.author.followers = [];
-                        if (data.isFollowing) {
-                            if (!r.author.followers.includes(currentUserId)) r.author.followers.push(currentUserId);
-                        } else {
-                            r.author.followers = r.author.followers.filter(id => id.toString() !== currentUserId);
-                        }
+                        r.author.followers = data.followers; 
                     }
                 });
                 updateFollowUI(data.isFollowing);
             }
-        } catch (err) { console.error(err); } finally { btn.disabled = false; }
+        } catch (err) {
+            console.error("Follow error:", err);
+        } finally {
+            btn.disabled = false;
+        }
     }
 
     async function toggleLike(recipeId) {
@@ -319,8 +320,7 @@
             });
             const updatedComments = await res.json();
             if (res.ok) {
-                const recipe = allRecipes.find(r => r._id === activeRecipeId);
-                recipe.comments = updatedComments;
+                allRecipes.find(r => r._id === activeRecipeId).comments = updatedComments;
                 renderComments(updatedComments);
                 input.value = '';
             }
