@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>PantryPal | Analytics</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
@@ -11,11 +11,12 @@
     
     <link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Outfit:wght@300;400;600&display=swap" rel="stylesheet">
     <style>
-        body { font-family: 'Outfit', sans-serif; }
+        body { font-family: 'Outfit', sans-serif; -webkit-tap-highlight-color: transparent; }
         .brand-font { font-family: 'Fredoka One', cursive; }
         .text-coral { color: #E97D5B; }
         .bg-coral { background-color: #E97D5B; }
         .sidebar-item:hover { color: #E97D5B; }
+        ::-webkit-scrollbar { width: 0px; background: transparent; }
     </style>
 </head>
 <body class="bg-gray-50 flex flex-col md:flex-row min-h-screen">
@@ -32,45 +33,54 @@
             <a href="profilepage.html" class="flex items-center gap-4 px-5 py-2 sidebar-item transition-all"><i data-lucide="user"></i> Profile</a>
         </nav>
         <div class="border-t border-gray-100 pt-8">
-            <button onclick="handleLogout()" class="w-full flex items-center gap-4 px-5 py-2 text-gray-500 font-semibold hover:text-coral transition-all">
+            <button onclick="handleLogout()" class="w-full flex items-center gap-4 px-5 py-2 text-gray-500 font-semibold hover:text-coral transition-all text-left">
                 <i data-lucide="log-out"></i> Log out
             </button>
         </div>
     </aside>
 
-    <main class="flex-grow p-6 md:p-12 md:ml-72 bg-white pb-24 md:pb-12">
+    <nav class="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-100 flex justify-around items-center p-4 z-[100] pb-6">
+        <a href="homepage.html" class="text-gray-400"><i data-lucide="home"></i></a>
+        <a href="search.html" class="text-gray-400"><i data-lucide="search"></i></a>
+        <a href="create.html" class="text-gray-400"><i data-lucide="plus-square"></i></a>
+        <a href="leaderboard.html" class="text-gray-400"><i data-lucide="trophy"></i></a>
+        <a href="analytics.html" class="text-coral"><i data-lucide="bar-chart-2"></i></a>
+        <a href="profilepage.html" class="text-gray-400"><i data-lucide="user"></i></a>
+    </nav>
+
+    <main class="flex-grow p-5 md:p-12 md:ml-72 bg-white min-h-screen pb-28 md:pb-12">
         <header class="mb-8 md:mb-10">
-            <h1 class="text-4xl md:text-5xl brand-font text-coral mb-2">Your Insights</h1>
-            <p class="text-gray-500 text-base md:text-lg">Visualizing your recipe performance metrics.</p>
+            <h1 class="text-3xl md:text-5xl brand-font text-coral mb-2">Your Insights</h1>
+            <p class="text-gray-500 text-sm md:text-lg">Visualizing your recipe performance metrics.</p>
         </header>
 
         <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 mb-8">
-            <div class="bg-white border border-gray-100 rounded-[2rem] p-6 flex flex-col items-center shadow-sm">
-                <div class="w-10 h-10 bg-orange-50 rounded-xl flex items-center justify-center text-orange-400 mb-4"><i data-lucide="utensils" class="w-5 h-5"></i></div>
-                <span id="statRecipes" class="text-2xl md:text-3xl font-bold text-gray-900">0</span>
-                <span class="text-[9px] font-bold text-gray-400 uppercase tracking-widest mt-2">Recipes</span>
+            <div class="bg-gray-50 border border-gray-100 rounded-[2rem] p-5 md:p-6 flex flex-col items-center shadow-sm active:scale-95 transition-transform">
+                <div class="w-10 h-10 bg-orange-100 rounded-xl flex items-center justify-center text-orange-500 mb-3 md:mb-4"><i data-lucide="utensils" class="w-5 h-5"></i></div>
+                <span id="statRecipes" class="text-xl md:text-3xl font-bold text-gray-900">0</span>
+                <span class="text-[8px] md:text-[9px] font-bold text-gray-400 uppercase tracking-widest mt-1">Recipes</span>
             </div>
-            <div class="bg-white border border-gray-100 rounded-[2rem] p-6 flex flex-col items-center shadow-sm">
-                <div class="w-10 h-10 bg-pink-50 rounded-xl flex items-center justify-center text-pink-400 mb-4"><i data-lucide="heart" class="w-5 h-5"></i></div>
-                <span id="statLikes" class="text-2xl md:text-3xl font-bold text-gray-900">0</span>
-                <span class="text-[9px] font-bold text-gray-400 uppercase tracking-widest mt-2">Likes</span>
+            <div class="bg-gray-50 border border-gray-100 rounded-[2rem] p-5 md:p-6 flex flex-col items-center shadow-sm active:scale-95 transition-transform">
+                <div class="w-10 h-10 bg-pink-100 rounded-xl flex items-center justify-center text-pink-500 mb-3 md:mb-4"><i data-lucide="heart" class="w-5 h-5"></i></div>
+                <span id="statLikes" class="text-xl md:text-3xl font-bold text-gray-900">0</span>
+                <span class="text-[8px] md:text-[9px] font-bold text-gray-400 uppercase tracking-widest mt-1">Likes</span>
             </div>
-            <div class="bg-white border border-gray-100 rounded-[2rem] p-6 flex flex-col items-center shadow-sm">
-                <div class="w-10 h-10 bg-blue-50 rounded-xl flex items-center justify-center text-blue-400 mb-4"><i data-lucide="bookmark" class="w-5 h-5"></i></div>
-                <span id="statSaves" class="text-2xl md:text-3xl font-bold text-gray-900">0</span>
-                <span class="text-[9px] font-bold text-gray-400 uppercase tracking-widest mt-2">Saves</span>
+            <div class="bg-gray-50 border border-gray-100 rounded-[2rem] p-5 md:p-6 flex flex-col items-center shadow-sm active:scale-95 transition-transform">
+                <div class="w-10 h-10 bg-blue-100 rounded-xl flex items-center justify-center text-blue-500 mb-3 md:mb-4"><i data-lucide="bookmark" class="w-5 h-5"></i></div>
+                <span id="statSaves" class="text-xl md:text-3xl font-bold text-gray-900">0</span>
+                <span class="text-[8px] md:text-[9px] font-bold text-gray-400 uppercase tracking-widest mt-1">Saves</span>
             </div>
-            <div class="bg-white border border-gray-100 rounded-[2rem] p-6 flex flex-col items-center shadow-sm">
-                <div class="w-10 h-10 bg-green-50 rounded-xl flex items-center justify-center text-green-400 mb-4"><i data-lucide="message-circle" class="w-5 h-5"></i></div>
-                <span id="statComments" class="text-2xl md:text-3xl font-bold text-gray-900">0</span>
-                <span class="text-[9px] font-bold text-gray-400 uppercase tracking-widest mt-2">Comments</span>
+            <div class="bg-gray-50 border border-gray-100 rounded-[2rem] p-5 md:p-6 flex flex-col items-center shadow-sm active:scale-95 transition-transform">
+                <div class="w-10 h-10 bg-green-100 rounded-xl flex items-center justify-center text-green-500 mb-3 md:mb-4"><i data-lucide="message-circle" class="w-5 h-5"></i></div>
+                <span id="statComments" class="text-xl md:text-3xl font-bold text-gray-900">0</span>
+                <span class="text-[8px] md:text-[9px] font-bold text-gray-400 uppercase tracking-widest mt-1">Comments</span>
             </div>
         </div>
 
-        <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
-            <div class="lg:col-span-12 bg-white border border-gray-100 rounded-[2.5rem] p-8 shadow-sm">
-                <h3 class="text-xl font-bold text-gray-900 mb-4 text-center">Performance Overview</h3>
-                <div class="relative h-[400px] w-full">
+        <div class="grid grid-cols-1 gap-8">
+            <div class="bg-white border border-gray-100 rounded-[2.5rem] p-6 md:p-8 shadow-sm">
+                <h3 class="text-lg md:text-xl font-bold text-gray-900 mb-6 text-center">Performance Overview</h3>
+                <div class="relative h-[300px] md:h-[400px] w-full">
                     <canvas id="engagementChart"></canvas>
                 </div>
             </div>
@@ -88,7 +98,10 @@
                 const response = await fetch('https://pantry-pal-jur7.onrender.com/api/recipes');
                 const recipes = await response.json();
                 
-                const myRecipes = recipes.filter(r => (r.author?._id || r.author).toString() === userId);
+                const myRecipes = recipes.filter(r => {
+                    const authId = (r.author?._id || r.author);
+                    return authId.toString() === userId;
+                });
                 
                 const stats = {
                     recipes: myRecipes.length,
@@ -110,36 +123,34 @@
 
         function initChart(data) {
             const ctx = document.getElementById('engagementChart').getContext('2d');
-            
             if (engagementChart) engagementChart.destroy();
 
-            // REGISTER PLUGIN (Already included in head)
             Chart.register(ChartDataLabels);
 
             engagementChart = new Chart(ctx, {
-                type: 'bar', // Set to Bar
+                type: 'bar',
                 data: {
                     labels: ['Recipes', 'Likes', 'Saves', 'Comments'],
                     datasets: [{
                         data: [data.recipes, data.likes, data.saves, data.comments],
                         backgroundColor: [
-                            'rgba(233, 125, 91, 0.4)', // Recipes (Lighter)
-                            'rgba(233, 125, 91, 0.6)', // Likes
-                            'rgba(233, 125, 91, 0.8)', // Saves
-                            'rgba(233, 125, 91, 1)'    // Comments (Darkest)
+                            'rgba(233, 125, 91, 0.4)',
+                            'rgba(233, 125, 91, 0.6)',
+                            'rgba(233, 125, 91, 0.8)',
+                            'rgba(233, 125, 91, 1)'
                         ],
                         borderColor: '#E97D5B',
                         borderWidth: 2,
-                        borderRadius: 12, // Modern rounded bars
-                        barThickness: 45
+                        borderRadius: 12,
+                        barThickness: window.innerWidth < 768 ? 25 : 45
                     }]
                 },
                 options: {
-                    indexAxis: 'y', // MAKES IT HORIZONTAL
+                    indexAxis: 'y',
                     responsive: true,
                     maintainAspectRatio: false,
                     layout: {
-                        padding: { right: 70 } // Extra space for labels so they don't clip
+                        padding: { right: window.innerWidth < 768 ? 40 : 70 }
                     },
                     plugins: {
                         legend: { display: false },
@@ -151,10 +162,9 @@
                             font: {
                                 family: 'Outfit',
                                 weight: 'bold',
-                                size: 15
+                                size: window.innerWidth < 768 ? 12 : 15
                             },
                             formatter: (value) => {
-                                // Handles big numbers (e.g. 10000 -> 10k)
                                 return value >= 1000 ? (value/1000).toFixed(1) + 'k' : value;
                             }
                         }
@@ -163,12 +173,16 @@
                         x: {
                             beginAtZero: true,
                             grid: { display: false },
-                            ticks: { display: false } // Numbers are on bars, so hide bottom axis
+                            ticks: { display: false }
                         },
                         y: {
                             grid: { display: false },
                             ticks: { 
-                                font: { family: 'Outfit', weight: 'bold', size: 14 },
+                                font: { 
+                                    family: 'Outfit', 
+                                    weight: 'bold', 
+                                    size: window.innerWidth < 768 ? 12 : 14 
+                                },
                                 color: '#111827'
                             }
                         }
@@ -184,6 +198,11 @@
 
         lucide.createIcons();
         window.onload = loadAnalytics;
+
+        // Re-init chart on resize for bar thickness adjustment
+        window.onresize = () => {
+            loadAnalytics();
+        };
     </script>
 </body>
 </html>
