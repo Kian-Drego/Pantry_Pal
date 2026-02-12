@@ -21,9 +21,16 @@
             to { opacity: 1; transform: translate(-50%, -50%) scale(1); }
         }
         
+        /* Mobile-specific slide up animation for the modal */
         @media (max-width: 768px) {
-            .modal-animate { animation: mobileModalIn 0.3s ease-out; }
-            @keyframes mobileModalIn { from { transform: translateY(100%); } to { transform: translateY(0); } }
+            .modal-animate { 
+                animation: mobileModalIn 0.35s cubic-bezier(0.4, 0, 0.2, 1); 
+                border-radius: 40px 40px 0 0 !important;
+            }
+            @keyframes mobileModalIn { 
+                from { transform: translateY(100%); } 
+                to { transform: translateY(0); } 
+            }
         }
 
         .modal-scroll::-webkit-scrollbar { width: 4px; }
@@ -50,81 +57,105 @@
         </div>
     </aside>
 
-    <div class="md:hidden flex justify-between items-center p-6 bg-white border-b border-gray-50 sticky top-0 z-50">
-        <div class="text-2xl brand-font text-coral">PantryPal</div>
-        <button onclick="handleLogout()" class="p-2 text-gray-400"><i data-lucide="log-out"></i></button>
+    <div class="md:hidden flex justify-between items-center p-5 bg-white border-b border-gray-50 sticky top-0 z-50">
+        <div class="text-xl brand-font text-coral">PantryPal</div>
+        <button onclick="handleLogout()" class="p-2 text-gray-400 active:text-coral transition-colors">
+            <i data-lucide="log-out" class="w-5 h-5"></i>
+        </button>
     </div>
 
-    <main class="flex-grow p-5 md:p-12 md:ml-72 bg-white min-h-screen pb-28 md:pb-12">
-        <div class="flex flex-col items-center text-center max-w-4xl mx-auto mb-12">
-            <div class="w-32 h-32 md:w-40 md:h-40 mb-6 rounded-full border-4 border-white shadow-xl overflow-hidden bg-gray-100 flex items-center justify-center relative">
-                <i id="placeholderIcon" data-lucide="user" class="w-12 h-12 text-gray-300"></i>
+    <main class="flex-grow p-4 md:p-12 md:ml-72 bg-white min-h-screen pb-24 md:pb-12">
+        <div class="flex flex-col items-center text-center max-w-4xl mx-auto mb-10">
+            <div class="w-28 h-28 md:w-40 md:h-40 mb-5 rounded-full border-4 border-white shadow-lg overflow-hidden bg-gray-100 flex items-center justify-center relative">
+                <i id="placeholderIcon" data-lucide="user" class="w-10 h-10 text-gray-300"></i>
                 <img id="profilePreview" src="" class="hidden w-full h-full object-cover">
             </div>
 
-            <h1 id="displayFullName" class="text-3xl md:text-4xl brand-font text-gray-900 mb-1">Chef</h1>
-            <p id="displayUsername" class="text-coral font-bold text-base mb-4">@...</p>
+            <h1 id="displayFullName" class="text-2xl md:text-4xl brand-font text-gray-900 mb-1">Chef</h1>
+            <p id="displayUsername" class="text-coral font-bold text-sm md:text-base mb-4">@...</p>
             <p id="displayBio" class="text-gray-500 text-sm md:text-lg max-w-xl px-4 leading-relaxed"></p>
 
-            <div id="actionArea" class="mt-6 flex gap-3">
+            <div id="actionArea" class="mt-6 flex flex-wrap justify-center gap-3 w-full">
                 </div>
 
-            <div class="grid grid-cols-3 gap-8 md:gap-16 mt-10 w-full max-w-lg border-t border-gray-50 pt-8">
-                <div class="text-center"><p id="recipeCount" class="text-xl md:text-2xl font-bold">0</p><p class="text-[10px] text-gray-400 uppercase font-black tracking-widest mt-1">Recipes</p></div>
-                <div class="text-center"><p id="followerCount" class="text-xl md:text-2xl font-bold">0</p><p class="text-[10px] text-gray-400 uppercase font-black tracking-widest mt-1">Followers</p></div>
-                <div class="text-center"><p id="followingCount" class="text-xl md:text-2xl font-bold">0</p><p class="text-[10px] text-gray-400 uppercase font-black tracking-widest mt-1">Following</p></div>
+            <div class="grid grid-cols-3 gap-4 md:gap-16 mt-8 w-full max-w-lg border-t border-b md:border-b-0 border-gray-50 py-6 md:py-8 md:pt-8">
+                <div class="text-center">
+                    <p id="recipeCount" class="text-lg md:text-2xl font-bold">0</p>
+                    <p class="text-[9px] md:text-[10px] text-gray-400 uppercase font-black tracking-widest mt-1">Recipes</p>
+                </div>
+                <div class="text-center">
+                    <p id="followerCount" class="text-lg md:text-2xl font-bold">0</p>
+                    <p class="text-[9px] md:text-[10px] text-gray-400 uppercase font-black tracking-widest mt-1">Followers</p>
+                </div>
+                <div class="text-center">
+                    <p id="followingCount" class="text-lg md:text-2xl font-bold">0</p>
+                    <p class="text-[9px] md:text-[10px] text-gray-400 uppercase font-black tracking-widest mt-1">Following</p>
+                </div>
             </div>
         </div>
 
         <div class="max-w-6xl mx-auto">
-            <div id="tabContainer" class="flex justify-center md:justify-start gap-12 border-b border-gray-100 mb-10 font-bold text-base">
+            <div id="tabContainer" class="flex justify-center md:justify-start gap-8 md:gap-12 border-b border-gray-100 mb-8 font-bold text-sm md:text-base">
                 <button id="btnMyRecipes" onclick="switchTab('my')" class="tab-active pb-4 transition-all">Kitchen Posts</button>
-                <button id="btnSaved" onclick="switchTab('saved')" class="text-gray-400 pb-4 transition-all hover:text-coral">Saved Recipes</button>
+                <button id="btnSaved" onclick="switchTab('saved')" class="text-gray-400 pb-4 transition-all hover:text-coral">Saved</button>
             </div>
-            <div id="recipeGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8"></div>
+            <div id="recipeGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 md:gap-8"></div>
         </div>
     </main>
 
+    <nav class="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-100 flex justify-around items-center p-3 z-[100] pb-6">
+        <a href="homepage.html" class="text-gray-400 p-2"><i data-lucide="home" class="w-6 h-6"></i></a>
+        <a href="search.html" class="text-gray-400 p-2"><i data-lucide="search" class="w-6 h-6"></i></a>
+        <a href="create.html" class="text-gray-400 p-2"><i data-lucide="plus-square" class="w-6 h-6"></i></a>
+        <a href="leaderboard.html" class="text-gray-400 p-2"><i data-lucide="trophy" class="w-6 h-6"></i></a>
+        <a href="profilepage.html" class="text-coral p-2"><i data-lucide="user" class="w-6 h-6"></i></a>
+    </nav>
+
     <div id="recipeModal" class="fixed inset-0 z-[200] hidden">
         <div class="absolute inset-0 bg-gray-900/60 backdrop-blur-sm" onclick="closeRecipeModal()"></div>
-        <div class="modal-content relative md:absolute top-0 md:top-1/2 left-0 md:left-1/2 md:-translate-x-1/2 md:-translate-y-1/2 bg-white w-full md:w-[95%] md:max-w-2xl h-full md:h-auto md:max-h-[90vh] md:rounded-[40px] shadow-2xl overflow-hidden flex flex-col modal-animate">
-            <button onclick="closeRecipeModal()" class="absolute top-5 right-5 z-[210] p-3 bg-black/20 backdrop-blur-md rounded-full text-white hover:bg-black/40 transition-all">
-                <i data-lucide="x" class="w-6 h-6"></i>
+        <div class="modal-content relative md:absolute bottom-0 md:top-1/2 left-0 md:left-1/2 md:-translate-x-1/2 md:-translate-y-1/2 bg-white w-full md:w-[95%] md:max-w-2xl h-[90vh] md:h-auto md:max-h-[90vh] md:rounded-[40px] shadow-2xl overflow-hidden flex flex-col modal-animate">
+            
+            <button onclick="closeRecipeModal()" class="absolute top-4 right-4 z-[210] p-2 bg-black/20 backdrop-blur-md rounded-full text-white">
+                <i data-lucide="x" class="w-5 h-5"></i>
             </button>
-            <div class="flex-grow overflow-y-auto modal-scroll pb-24 md:pb-10">
-                <img id="modalImage" class="w-full h-72 md:h-96 object-cover">
-                <div class="p-6 md:p-10">
+            
+            <div class="flex-grow overflow-y-auto modal-scroll pb-20 md:pb-10">
+                <img id="modalImage" class="w-full h-64 md:h-96 object-cover flex-shrink-0">
+                <div class="p-5 md:p-10">
                     <div class="flex flex-col md:flex-row md:justify-between md:items-start gap-4 mb-6">
-                        <div>
-                            <h2 id="modalTitle" class="text-3xl brand-font text-gray-900 leading-tight"></h2>
-                            <p id="modalAuthor" class="text-coral font-bold text-sm mt-2"></p>
+                        <div class="text-center md:text-left">
+                            <h2 id="modalTitle" class="text-2xl md:text-3xl brand-font text-gray-900 leading-tight"></h2>
+                            <p id="modalAuthor" class="text-coral font-bold text-sm mt-1"></p>
                         </div>
-                        <div class="flex gap-2">
-                            <button id="modalLikeBtn" onclick="toggleLike(activeRecipeId)" class="flex items-center gap-2 px-6 py-3 rounded-2xl font-bold border-2 transition-all active:scale-90">
+                        <div class="flex justify-center gap-2">
+                            <button id="modalLikeBtn" onclick="toggleLike(activeRecipeId)" class="flex-1 md:flex-none flex items-center justify-center gap-2 px-6 py-3 rounded-2xl font-bold border-2 transition-all active:scale-90">
                                 <i data-lucide="heart" id="modalLikeIcon" class="w-5 h-5"></i>
                                 <span id="modalLikeCount">0</span>
                             </button>
-                            <button id="modalSaveBtn" onclick="toggleSave(activeRecipeId)" class="p-4 rounded-2xl border-2 border-gray-100 bg-gray-50 text-gray-400 active:scale-90">
+                            <button id="modalSaveBtn" onclick="toggleSave(activeRecipeId)" class="p-3 rounded-2xl border-2 border-gray-100 bg-gray-50 text-gray-400 active:scale-90">
                                 <i data-lucide="bookmark" id="modalSaveIcon" class="w-6 h-6"></i>
                             </button>
                         </div>
                     </div>
-                    <p id="modalDescription" class="text-gray-600 mb-10 leading-relaxed italic"></p>
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-10">
-                        <div class="bg-orange-50/50 p-6 rounded-[2rem]">
-                            <h3 class="font-bold mb-4 text-coral flex items-center gap-2"><i data-lucide="shopping-basket" class="w-5 h-5"></i> Ingredients</h3>
+
+                    <p id="modalDescription" class="text-gray-600 mb-8 leading-relaxed italic text-sm md:text-base"></p>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+                        <div class="bg-orange-50/50 p-5 rounded-[2rem]">
+                            <h3 class="font-bold mb-3 text-coral flex items-center gap-2"><i data-lucide="shopping-basket" class="w-4 h-4"></i> Ingredients</h3>
                             <ul id="modalIngredients" class="space-y-2 text-gray-700 text-sm"></ul>
                         </div>
-                        <div class="bg-gray-50 p-6 rounded-[2rem]">
-                            <h3 class="font-bold mb-4 text-coral flex items-center gap-2"><i data-lucide="chef-hat" class="w-5 h-5"></i> Steps</h3>
-                            <ol id="modalInstructions" class="space-y-3 text-gray-700 text-sm list-decimal ml-5"></ol>
+                        <div class="bg-gray-50 p-5 rounded-[2rem]">
+                            <h3 class="font-bold mb-3 text-coral flex items-center gap-2"><i data-lucide="chef-hat" class="w-4 h-4"></i> Steps</h3>
+                            <ol id="modalInstructions" class="space-y-3 text-gray-700 text-sm list-decimal ml-4"></ol>
                         </div>
                     </div>
+
                     <div class="border-t border-gray-100 pt-8">
-                        <h3 class="font-bold text-gray-900 mb-6 flex items-center gap-2"><i data-lucide="message-circle" class="w-5 h-5 text-coral"></i> Chef's Table</h3>
+                        <h3 class="font-bold text-gray-900 mb-4 flex items-center gap-2"><i data-lucide="message-circle" class="w-5 h-5 text-coral"></i> Chef's Table</h3>
                         <div id="commentsContainer" class="space-y-4 mb-6"></div>
                         <div class="flex gap-2 items-center bg-gray-50 p-2 rounded-2xl border border-gray-100">
-                            <input type="text" id="commentInput" placeholder="Write a comment..." class="flex-grow p-3 bg-transparent outline-none text-sm">
+                            <input type="text" id="commentInput" placeholder="Say something nice..." class="flex-grow p-3 bg-transparent outline-none text-sm">
                             <button onclick="postComment()" class="bg-coral text-white p-3 rounded-xl font-bold active:scale-90"><i data-lucide="send" class="w-5 h-5"></i></button>
                         </div>
                     </div>
@@ -160,8 +191,8 @@
                     document.getElementById('displayFullName').innerText = user.username;
                     document.getElementById('displayUsername').innerText = '@' + user.username;
                     document.getElementById('displayBio').innerText = user.bio || 'Professional Chef at PantryPal.';
-                    document.getElementById('followerCount').innerText = user.followers?.length || 0;
-                    document.getElementById('followingCount').innerText = user.following?.length || 0;
+                    document.getElementById('followerCount').innerText = data.followerCount || 0;
+                    document.getElementById('followingCount').innerText = data.followingCount || 0;
 
                     if (user.profilePic) {
                         const img = document.getElementById('profilePreview');
@@ -169,15 +200,14 @@
                         document.getElementById('placeholderIcon').classList.add('hidden');
                     }
 
-                    // Render Action Buttons
                     const actionArea = document.getElementById('actionArea');
                     if (isOwnProfile) {
-                        actionArea.innerHTML = `<button onclick="window.location.href='edit-profile.html'" class="px-10 py-3 border-2 border-gray-100 rounded-2xl font-bold text-gray-600 hover:border-coral hover:text-coral transition-all active:scale-95 shadow-sm">Edit Profile</button>`;
+                        actionArea.innerHTML = `<button onclick="window.location.href='edit-profile.html'" class="w-full md:w-auto px-10 py-3 border-2 border-gray-100 rounded-2xl font-bold text-gray-600 active:border-coral transition-all active:scale-95">Edit Profile</button>`;
                     } else {
                         const isFollowing = user.followers?.some(id => id.toString() === myUserId);
                         actionArea.innerHTML = `
                             <button onclick="toggleFollow('${user._id}')" id="followBtn" 
-                                class="px-10 py-3 rounded-2xl font-bold transition-all active:scale-95 shadow-lg shadow-orange-100 
+                                class="w-full md:w-auto px-10 py-3 rounded-2xl font-bold transition-all active:scale-95 shadow-lg shadow-orange-100 
                                 ${isFollowing ? 'bg-gray-100 text-gray-600' : 'bg-coral text-white'}">
                                 ${isFollowing ? 'Following' : 'Follow Chef'}
                             </button>`;
@@ -188,9 +218,11 @@
         }
 
         async function fetchAllRecipes() {
-            const res = await fetch('https://pantry-pal-jur7.onrender.com/api/recipes');
-            allRecipes = await res.json();
-            renderProfileFeed();
+            try {
+                const res = await fetch('https://pantry-pal-jur7.onrender.com/api/recipes');
+                allRecipes = await res.json();
+                renderProfileFeed();
+            } catch (err) { console.error(err); }
         }
 
         function renderProfileFeed() {
@@ -199,18 +231,20 @@
                 const authorId = (r.author?._id || r.author).toString();
                 return currentTab === 'my' ? authorId === targetId : r.saves?.some(id => id.toString() === targetId);
             });
+            
             document.getElementById('recipeCount').innerText = allRecipes.filter(r => (r.author?._id || r.author).toString() === targetId).length;
             
             if (filtered.length === 0) {
-                grid.innerHTML = `<div class="col-span-full py-20 text-center text-gray-400 italic">No posts here.</div>`; return;
+                grid.innerHTML = `<div class="col-span-full py-16 text-center text-gray-400 italic text-sm">No posts yet.</div>`; return;
             }
             grid.innerHTML = filtered.map(r => `
-                <div onclick="openRecipeModal('${r._id}')" class="group bg-white rounded-[3rem] overflow-hidden border border-gray-100 shadow-sm active:scale-95 transition-all cursor-pointer">
-                    <img src="${r.image || '../default.png'}" class="w-full h-56 object-cover">
-                    <div class="p-6">
-                        <h3 class="font-bold text-lg mb-1 truncate text-gray-900">${r.title}</h3>
-                        <div class="flex items-center gap-4 mt-3 text-gray-400 font-bold text-xs">
-                            <span class="flex items-center gap-1.5"><i data-lucide="heart" class="w-4 h-4"></i> ${r.likes || 0}</span>
+                <div onclick="openRecipeModal('${r._id}')" class="group bg-white rounded-[2.5rem] overflow-hidden border border-gray-100 shadow-sm active:scale-[0.97] transition-all cursor-pointer">
+                    <img src="${r.image || '../default.png'}" class="w-full h-52 object-cover">
+                    <div class="p-5">
+                        <h3 class="font-bold text-base mb-1 truncate text-gray-900">${r.title}</h3>
+                        <div class="flex items-center gap-3 mt-2 text-gray-400 font-bold text-[11px]">
+                            <span class="flex items-center gap-1"><i data-lucide="heart" class="w-3.5 h-3.5"></i> ${r.likes || 0}</span>
+                            <span class="flex items-center gap-1"><i data-lucide="message-circle" class="w-3.5 h-3.5"></i> ${r.comments?.length || 0}</span>
                         </div>
                     </div>
                 </div>`).join('');
@@ -225,7 +259,7 @@
             document.getElementById('modalTitle').innerText = recipe.title;
             document.getElementById('modalAuthor').innerText = `@${recipe.author?.username || 'chef'}`;
             document.getElementById('modalDescription').innerText = recipe.description || '';
-            document.getElementById('modalIngredients').innerHTML = (recipe.ingredients || []).map(i => `<li class="flex items-center gap-2"><div class="w-1.5 h-1.5 rounded-full bg-coral"></div>${i}</li>`).join('');
+            document.getElementById('modalIngredients').innerHTML = (recipe.ingredients || []).map(i => `<li class="flex items-center gap-2"><div class="w-1 h-1 rounded-full bg-coral"></div>${i}</li>`).join('');
             document.getElementById('modalInstructions').innerHTML = (recipe.instructions || []).map(s => `<li>${s}</li>`).join('');
             
             updateLikeUI(recipe.likedBy?.some(lid => lid.toString() === myUserId));
@@ -256,7 +290,7 @@
             const data = await res.json();
             if (res.ok) {
                 const recipe = allRecipes.find(r => r._id === id);
-                recipe.saves = data.saves; updateSaveUI(data.isSaved);
+                recipe.saves = data.saves; updateSaveUI(data.isSaved); renderProfileFeed();
             }
         }
 
@@ -277,9 +311,9 @@
         function renderComments(comments) {
             document.getElementById('commentsContainer').innerHTML = (comments || []).map(c => `
                 <div class="bg-gray-50 p-4 rounded-[1.5rem] border border-gray-100">
-                    <p class="text-xs font-black text-coral mb-1">@${c.username}</p>
+                    <p class="text-[10px] font-black text-coral mb-0.5">@${c.username}</p>
                     <p class="text-sm text-gray-700">${c.text}</p>
-                </div>`).join('') || '<p class="text-gray-400 text-sm italic">No comments yet.</p>';
+                </div>`).join('') || '<p class="text-gray-400 text-xs italic text-center py-4">No comments yet.</p>';
         }
 
         async function toggleFollow(id) {
@@ -292,13 +326,13 @@
 
         function updateLikeUI(isLiked) {
             const btn = document.getElementById('modalLikeBtn');
-            btn.className = isLiked ? "flex items-center gap-2 px-6 py-3 rounded-2xl font-bold border-2 border-red-500 bg-red-500 text-white transition-all" : "flex items-center gap-2 px-6 py-3 rounded-2xl font-bold border-2 border-gray-100 text-gray-400 transition-all";
+            btn.className = isLiked ? "flex-1 md:flex-none flex items-center justify-center gap-2 px-6 py-3 rounded-2xl font-bold border-2 border-red-500 bg-red-500 text-white transition-all" : "flex-1 md:flex-none flex items-center justify-center gap-2 px-6 py-3 rounded-2xl font-bold border-2 border-gray-100 text-gray-400 transition-all";
             document.getElementById('modalLikeIcon').classList.toggle('fill-current', isLiked);
         }
 
         function updateSaveUI(isSaved) {
             const btn = document.getElementById('modalSaveBtn');
-            btn.className = isSaved ? "p-4 rounded-2xl border-2 border-blue-500 bg-blue-500 text-white" : "p-4 rounded-2xl border-2 border-gray-100 bg-gray-50 text-gray-400";
+            btn.className = isSaved ? "p-3 rounded-2xl border-2 border-blue-500 bg-blue-500 text-white" : "p-3 rounded-2xl border-2 border-gray-100 bg-gray-50 text-gray-400";
             document.getElementById('modalSaveIcon').classList.toggle('fill-current', isSaved);
         }
 
