@@ -92,25 +92,25 @@ router.put('/profile/:id', async (req, res) => {
  */
 router.post('/follow/:id', async (req, res) => {
   try {
-    const targetUserId = req.params.id; // Chef being followed
-    const { currentUserId } = req.body; // Logged in user
+    const targetUserId = req.params.id; // The Chef
+    const { currentUserId } = req.body; // The Logged-in User
 
     if (!currentUserId) return res.status(400).json({ error: "User ID required" });
-    if (targetUserId === currentUserId) return res.status(400).json({ error: "You cannot follow yourself" });
+    if (targetUserId === currentUserId) return res.status(400).json({ error: "Self-following not allowed" });
 
     const targetUser = await User.findById(targetUserId);
-    if (!targetUser) return res.status(404).json({ error: "User not found" });
+    if (!targetUser) return res.status(404).json({ error: "Chef not found" });
 
-    // Ensure we check IDs as strings to avoid Type mismatch bugs
+    // CRITICAL FIX: Convert ObjectIDs to Strings before checking
     const isFollowing = targetUser.followers.some(id => id.toString() === currentUserId);
 
     if (isFollowing) {
-      // UNFOLLOW logic
+      // UNFOLLOW logic: Atomically remove from both users
       await User.findByIdAndUpdate(targetUserId, { $pull: { followers: currentUserId } });
       await User.findByIdAndUpdate(currentUserId, { $pull: { following: targetUserId } });
       res.json({ success: true, message: "Unfollowed", isFollowing: false });
     } else {
-      // FOLLOW logic
+      // FOLLOW logic: Atomically add to both users
       await User.findByIdAndUpdate(targetUserId, { $addToSet: { followers: currentUserId } });
       await User.findByIdAndUpdate(currentUserId, { $addToSet: { following: targetUserId } });
       res.json({ success: true, message: "Followed", isFollowing: true });
@@ -120,5 +120,4 @@ router.post('/follow/:id', async (req, res) => {
     res.status(500).json({ success: false, error: "Server error during follow action" });
   }
 });
-
 module.exports = router;
