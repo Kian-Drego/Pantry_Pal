@@ -14,6 +14,13 @@
         
         /* Smooth touch feedback for mobile */
         .touch-action:active { transform: scale(0.98); }
+
+        /* Modal Animation */
+        .modal-enter { animation: modalIn 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
+        @keyframes modalIn {
+            from { opacity: 0; transform: scale(0.9) translateY(20px); }
+            to { opacity: 1; transform: scale(1) translateY(0); }
+        }
     </style>
 </head>
 <body class="bg-white text-gray-800 antialiased overflow-x-hidden">
@@ -41,9 +48,9 @@
                 Start Cooking Now
             </a>
             
-            <a href="Frontend/homepage-nlg.html" class="text-lg font-bold text-gray-900 hover:text-coral transition-colors inline-block touch-action">
+            <button onclick="togglePopup()" class="text-lg font-bold text-gray-900 hover:text-coral transition-colors inline-block touch-action">
                 Explore Recipes
-            </a>
+            </button>
         </div>
 
         <div class="mt-20 md:mt-24 flex flex-wrap justify-center items-center gap-4 md:gap-6 text-gray-600 font-semibold tracking-wide text-xs md:text-sm">
@@ -53,8 +60,36 @@
             <span class="hidden sm:block h-1.5 w-1.5 bg-gray-300 rounded-full"></span>
             <span>Zero Plagiarism</span>
         </div>
-
     </main>
+
+    <div id="recipePopup" class="fixed inset-0 z-50 flex items-center justify-center hidden px-6">
+        <div class="absolute inset-0 bg-black/40 backdrop-blur-sm" onclick="togglePopup()"></div>
+        <div class="bg-white p-8 md:p-12 rounded-[40px] shadow-2xl relative max-w-sm w-full text-center modal-enter">
+            <div class="w-20 h-20 bg-orange-50 rounded-full flex items-center justify-center mx-auto mb-6">
+                <span class="text-4xl">👨‍🍳</span>
+            </div>
+            <h2 class="brand-font text-2xl mb-4 text-gray-900">Kitchen's Closed!</h2>
+            <p class="text-gray-500 leading-relaxed mb-8">
+                Public exploring is currently unavailable. Log in to access the full menu!
+            </p>
+            <button onclick="togglePopup()" class="w-full py-4 bg-gray-100 text-gray-900 rounded-2xl font-bold hover:bg-gray-200 transition-colors active:scale-95">
+                Got it
+            </button>
+        </div>
+    </div>
+
+    <script>
+        function togglePopup() {
+            const popup = document.getElementById('recipePopup');
+            if (popup.classList.contains('hidden')) {
+                popup.classList.remove('hidden');
+                document.body.style.overflow = 'hidden'; // Prevent scroll
+            } else {
+                popup.classList.add('hidden');
+                document.body.style.overflow = 'auto'; // Re-enable scroll
+            }
+        }
+    </script>
 
 </body>
 </html>
