@@ -4,7 +4,6 @@ const User = require('../models/User');
 
 /**
  * 1. Get all recipes (Homepage Feed)
- * Populates author and includes comment counts
  */
 router.get('/', async (req, res) => {
   try {
@@ -25,6 +24,7 @@ router.post('/', async (req, res) => {
     const newRecipe = new Recipe(req.body);
     await newRecipe.save();
     
+    // Award points to the chef
     if (req.body.author) {
       await User.findByIdAndUpdate(req.body.author, { $inc: { points: 10 } });
     }
@@ -44,20 +44,29 @@ router.post('/like/:id', async (req, res) => {
     const recipe = await Recipe.findById(req.params.id);
     if (!recipe) return res.status(404).json({ error: "Not found" });
 
-    const alreadyLiked = recipe.likedBy?.some(id => id.toString() === userId);
+    // Ensure array exists for legacy data
+    const likedBy = recipe.likedBy || [];
+    const alreadyLiked = likedBy.some(id => id.toString() === userId);
+
     const update = alreadyLiked 
       ? { $pull: { likedBy: userId }, $inc: { likes: -1 } }
       : { $addToSet: { likedBy: userId }, $inc: { likes: 1 } };
 
-    const updated = await Recipe.findByIdAndUpdate(req.params.id, update, { new: true });
-    res.json({ likes: updated.likes, isLiked: !alreadyLiked, likedBy: updated.likedBy });
+    // FIX: Using returnDocument instead of new
+    const updated = await Recipe.findByIdAndUpdate(req.params.id, update, { returnDocument: 'after' });
+    
+    res.json({ 
+      likes: updated.likes, 
+      isLiked: !alreadyLiked, 
+      likedBy: updated.likedBy 
+    });
   } catch (err) {
     res.status(500).json({ error: "Like failed" });
   }
 });
 
 /**
- * 4. NEW: Toggle Save Recipe
+ * 4. Toggle Save Recipe
  */
 router.post('/save/:id', async (req, res) => {
   try {
@@ -65,12 +74,17 @@ router.post('/save/:id', async (req, res) => {
     const recipe = await Recipe.findById(req.params.id);
     if (!recipe) return res.status(404).json({ error: "Not found" });
 
-    const isSaved = recipe.saves?.some(id => id.toString() === userId);
+    // Ensure array exists
+    const saves = recipe.saves || [];
+    const isSaved = saves.some(id => id.toString() === userId);
+
     const update = isSaved 
       ? { $pull: { saves: userId } } 
       : { $addToSet: { saves: userId } };
 
-    const updated = await Recipe.findByIdAndUpdate(req.params.id, update, { new: true });
+    // FIX: Using returnDocument instead of new
+    const updated = await Recipe.findByIdAndUpdate(req.params.id, update, { returnDocument: 'after' });
+    
     res.json({ saves: updated.saves, isSaved: !isSaved });
   } catch (err) {
     res.status(500).json({ error: "Save failed" });
@@ -78,18 +92,20 @@ router.post('/save/:id', async (req, res) => {
 });
 
 /**
- * 5. NEW: Add Comment
+ * 5. Add Comment
  */
 router.post('/comment/:id', async (req, res) => {
   try {
     const { userId, username, text } = req.body;
     if (!text) return res.status(400).json({ error: "Comment text required" });
 
+    // FIX: Using returnDocument instead of new
     const updatedRecipe = await Recipe.findByIdAndUpdate(
       req.params.id,
       { $push: { comments: { userId, username, text } } },
-      { new: true }
+      { returnDocument: 'after' }
     );
+    
     res.json(updatedRecipe.comments);
   } catch (err) {
     res.status(500).json({ error: "Comment failed" });
