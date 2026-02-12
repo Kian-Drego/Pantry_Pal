@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PantryPal | Leaderboard</title>
+    <title>PantryPal | Monthly Leaderboard</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
     <link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Outfit:wght@300;400;600&display=swap" rel="stylesheet">
@@ -13,98 +13,101 @@
         .text-coral { color: #E97D5B; }
         .bg-coral { background-color: #E97D5B; }
         .sidebar-item:hover { color: #E97D5B; }
-        
-        /* Smooth scrolling for mobile list */
-        .custom-scrollbar::-webkit-scrollbar { width: 4px; }
-        .custom-scrollbar::-webkit-scrollbar-thumb { background: #E97D5B; border-radius: 10px; }
     </style>
 </head>
 <body class="bg-gray-50 flex flex-col md:flex-row min-h-screen">
 
-    <aside class="hidden md:flex w-72 bg-white border-r border-gray-100 flex-col p-8 fixed h-full">
+    <aside class="hidden md:flex w-72 bg-white border-r border-gray-100 flex-col p-8 fixed h-full z-10">
         <div class="text-3xl brand-font text-coral mb-12">PantryPal</div>
-        <nav class="space-y-6 flex-grow">
-            <a href="homepage.html" class="flex items-center gap-4 px-5 py-2 text-gray-500 font-semibold sidebar-item transition-all">
-                <i data-lucide="home"></i> Home
-            </a>
-            <a href="search.html" class="flex items-center gap-4 px-5 py-2 text-gray-500 font-semibold sidebar-item transition-all">
-                <i data-lucide="search"></i> Search
-            </a>
-            <a href="create.html" class="flex items-center gap-4 px-5 py-2 text-gray-500 font-semibold sidebar-item transition-all">
-                <i data-lucide="plus-square"></i> Create
-            </a>
-            <a href="leaderboard.html" class="flex items-center gap-4 bg-coral text-white px-5 py-4 rounded-2xl font-semibold shadow-lg shadow-orange-100">
-                <i data-lucide="trophy"></i> Leaderboard
-            </a>
-            <a href="analytics.html" class="flex items-center gap-4 px-5 py-2 text-gray-500 font-semibold sidebar-item transition-all">
-                <i data-lucide="bar-chart-2"></i> Analytics
-            </a>
-            <a href="profilepage.html" class="flex items-center gap-4 px-5 py-2 text-gray-500 font-semibold sidebar-item transition-all">
-                <i data-lucide="user"></i> Profile
-            </a>
+        <nav class="space-y-6 flex-grow text-gray-500 font-semibold">
+            <a href="homepage.html" class="flex items-center gap-4 px-5 py-2 sidebar-item transition-all"><i data-lucide="home"></i> Home</a>
+            <a href="search.html" class="flex items-center gap-4 px-5 py-2 sidebar-item transition-all"><i data-lucide="search"></i> Search</a>
+            <a href="create.html" class="flex items-center gap-4 px-5 py-2 sidebar-item transition-all"><i data-lucide="plus-square"></i> Create</a>
+            <a href="leaderboard.html" class="flex items-center gap-4 bg-coral text-white px-5 py-4 rounded-2xl shadow-lg"><i data-lucide="trophy"></i> Leaderboard</a>
+            <a href="analytics.html" class="flex items-center gap-4 px-5 py-2 sidebar-item transition-all"><i data-lucide="bar-chart-2"></i> Analytics</a>
+            <a href="profilepage.html" class="flex items-center gap-4 px-5 py-2 sidebar-item transition-all"><i data-lucide="user"></i> Profile</a>
         </nav>
-        <div class="border-t border-gray-100 pt-8">
-            <a href="../README.md" class="flex items-center gap-4 px-5 py-2 text-gray-500 font-semibold sidebar-item transition-all">
-                <i data-lucide="log-out"></i> Log out
-            </a>
-        </div>
     </aside>
 
-    <nav class="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-100 flex justify-around items-center p-4 z-50">
-        <a href="homepage.html" class="text-gray-400"><i data-lucide="home"></i></a>
-        <a href="search.html" class="text-gray-400"><i data-lucide="search"></i></a>
-        <a href="create.html" class="text-gray-400"><i data-lucide="plus-square"></i></a>
-        <a href="leaderboard.html" class="text-coral"><i data-lucide="trophy"></i></a>
-        <a href="profilepage.html" class="text-gray-400"><i data-lucide="user"></i></a>
-    </nav>
-
-    <main class="md:ml-72 flex-grow p-6 md:p-12 bg-white flex flex-col items-center min-h-screen pb-24 md:pb-12">
-        
-        <header class="text-center mt-4 md:mt-0">
-            <h1 class="text-4xl md:text-6xl brand-font text-coral mb-4">Chef of the Month</h1>
-            <p class="text-gray-500 text-base md:text-xl font-medium px-4">Celebrating our community's top culinary creators.</p>
+    <main class="flex-grow p-6 md:p-12 md:ml-72 bg-white min-h-screen">
+        <header class="mb-10">
+            <h1 class="text-4xl md:text-5xl brand-font text-coral mb-2">Top Chefs</h1>
+            <p id="monthYearLabel" class="text-gray-500 text-lg">Ranking by most likes earned this month.</p>
         </header>
 
-        <div id="leaderboard-container" class="mt-12 md:mt-20 w-full max-w-2xl border-2 border-dashed border-gray-100 rounded-[32px] md:rounded-[40px] p-6 md:p-12 flex flex-col items-center justify-center min-h-[300px]">
-            <p class="text-gray-300 font-semibold text-center italic tracking-wide">Ranking updates every 24 hours...</p>
+        <div class="max-w-4xl space-y-4" id="leaderboardList">
+            <div class="py-10 text-center text-gray-400">
+                <i data-lucide="loader-2" class="animate-spin mx-auto w-8 h-8 mb-2"></i>
+                <p>Calculating rankings...</p>
+            </div>
         </div>
-
     </main>
 
     <script>
-        // Lucide icons initialization
-        lucide.createIcons();
+        async function loadLeaderboard() {
+            const listContainer = document.getElementById('leaderboardList');
+            const now = new Date();
+            const currentMonth = now.getMonth();
+            const currentYear = now.getFullYear();
+            
+            // Set label
+            const monthName = now.toLocaleString('default', { month: 'long' });
+            document.getElementById('monthYearLabel').innerText = `Ranking by most likes earned in ${monthName} ${currentYear}`;
 
-        // Script logic (Unchanged, targeting the specific container ID)
-        async function fetchLeaderboard() {
             try {
-                const response = await fetch('https://pantry-pal-jur7.onrender.com/api/leaderboard');
-                const users = await response.json();
-                
-                const container = document.getElementById('leaderboard-container');
-                if (users.length > 0) {
-                    // Optimized for mobile: cleaner borders and better spacing
-                    container.classList.remove('border-dashed', 'justify-center');
-                    container.classList.add('border-solid');
-                    
-                    container.innerHTML = users.map((user, index) => `
-                        <div class="flex items-center justify-between w-full py-4 px-2 border-b border-gray-50 last:border-0">
-                            <div class="flex items-center gap-4">
-                                <span class="text-lg font-bold ${index < 3 ? 'text-coral' : 'text-gray-400'}">#${index + 1}</span>
-                                <span class="font-semibold text-gray-700">${user.username}</span>
-                            </div>
-                            <span class="font-bold text-coral bg-orange-50 px-3 py-1 rounded-full text-sm">${user.points} pts</span>
-                        </div>
-                    `).join('');
+                const response = await fetch('https://pantry-pal-jur7.onrender.com/api/recipes');
+                const recipes = await response.json();
+
+                // 1. Filter recipes created this month
+                const monthlyRecipes = recipes.filter(r => {
+                    const date = new Date(r.createdAt);
+                    return date.getMonth() === currentMonth && date.getFullYear() === currentYear;
+                });
+
+                // 2. Group likes by user
+                const userScores = {};
+                monthlyRecipes.forEach(r => {
+                    const chef = r.author?.username || 'Unknown Chef';
+                    const chefId = r.author?._id || r.author;
+                    if (!userScores[chefId]) {
+                        userScores[chefId] = { username: chef, likes: 0 };
+                    }
+                    userScores[chefId].likes += (r.likes || 0);
+                });
+
+                // 3. Sort by likes descending
+                const sortedChefs = Object.values(userScores).sort((a, b) => b.likes - a.likes);
+
+                // 4. Render
+                if (sortedChefs.length === 0) {
+                    listContainer.innerHTML = `<p class="text-center py-10 text-gray-400 italic">No likes recorded yet for this month.</p>`;
+                    return;
                 }
+
+                listContainer.innerHTML = sortedChefs.map((chef, index) => `
+                    <div class="flex items-center justify-between p-6 bg-gray-50 rounded-3xl border border-gray-100 hover:shadow-md transition-all">
+                        <div class="flex items-center gap-6">
+                            <span class="text-2xl font-black ${index < 3 ? 'text-coral' : 'text-gray-300'} w-8">#${index + 1}</span>
+                            <div>
+                                <h3 class="font-bold text-gray-900 text-lg">@${chef.username}</h3>
+                                <p class="text-xs text-gray-400 uppercase tracking-widest font-bold">Chef</p>
+                            </div>
+                        </div>
+                        <div class="text-right">
+                            <p class="text-2xl font-black text-gray-900">${chef.likes}</p>
+                            <p class="text-xs text-gray-400 uppercase font-bold">Monthly Likes</p>
+                        </div>
+                    </div>
+                `).join('');
+                
+                lucide.createIcons();
             } catch (err) {
-                console.error("Error fetching leaderboard:", err);
-                const container = document.getElementById('leaderboard-container');
-                container.innerHTML = `<p class="text-red-400">Unable to load rankings.</p>`;
+                console.error(err);
+                listContainer.innerHTML = `<p class="text-center text-red-400">Failed to load leaderboard.</p>`;
             }
         }
-        
-        window.onload = fetchLeaderboard;
+
+        window.onload = loadLeaderboard;
     </script>
 </body>
 </html>
