@@ -75,22 +75,27 @@
         </div>
     </main>
 
-    <div id="recipeModal" class="fixed inset-0 z-[150] hidden overflow-y-auto">
+    <div id="recipeModal" class="fixed inset-0 z-[150] hidden">
         <div class="absolute inset-0 bg-gray-900/60 backdrop-blur-sm" onclick="closeRecipeModal()"></div>
-        <div class="relative bg-white w-full md:w-[95%] md:max-w-2xl mx-auto mt-10 md:mt-20 rounded-[40px] shadow-2xl overflow-hidden mb-10">
-            <img id="modalImage" class="w-full h-64 md:h-80 object-cover">
-            <button onclick="closeRecipeModal()" class="absolute top-5 right-5 p-3 bg-black/20 text-white rounded-full"><i data-lucide="x"></i></button>
-            <div class="p-8">
-                <h2 id="modalTitle" class="text-3xl brand-font text-gray-900 mb-2"></h2>
-                <p id="modalAuthor" class="text-coral font-bold mb-6"></p>
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-                    <div>
-                        <h3 class="font-bold text-coral mb-3">Ingredients</h3>
-                        <ul id="modalIngredients" class="text-sm space-y-1 text-gray-600 list-disc ml-4"></ul>
+        <div class="modal-content relative md:absolute top-0 md:top-1/2 left-0 md:left-1/2 md:-translate-x-1/2 md:-translate-y-1/2 bg-white w-full md:w-[95%] md:max-w-2xl h-full md:h-auto md:max-h-[90vh] md:rounded-[40px] shadow-2xl overflow-hidden flex flex-col modal-animate">
+            <button onclick="closeRecipeModal()" class="absolute top-5 right-5 z-[160] p-3 bg-black/20 text-white rounded-full"><i data-lucide="x"></i></button>
+            <div class="flex-grow overflow-y-auto pb-24">
+                <img id="modalImage" class="w-full h-64 md:h-80 object-cover">
+                <div class="p-8">
+                    <h2 id="modalTitle" class="text-3xl brand-font text-gray-900 mb-2"></h2>
+                    <div class="flex items-center justify-between mb-8">
+                        <p id="modalAuthor" class="text-coral font-bold"></p>
+                        <button id="modalVisitBtn" class="text-xs bg-orange-50 text-coral px-4 py-2 rounded-xl font-bold">Visit Profile</button>
                     </div>
-                    <div>
-                        <h3 class="font-bold text-coral mb-3">Steps</h3>
-                        <ol id="modalInstructions" class="text-sm space-y-1 text-gray-600 list-decimal ml-4"></ol>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                        <div>
+                            <h3 class="font-bold text-coral mb-3">Ingredients</h3>
+                            <ul id="modalIngredients" class="text-sm space-y-1 text-gray-600 list-disc ml-4"></ul>
+                        </div>
+                        <div>
+                            <h3 class="font-bold text-coral mb-3">Steps</h3>
+                            <ol id="modalInstructions" class="text-sm space-y-1 text-gray-600 list-decimal ml-4"></ol>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -120,18 +125,16 @@
             clearTimeout(searchTimeout);
             searchTimeout = setTimeout(async () => {
                 try {
-                    // Optimized: Recipes endpoint for names, generic endpoint for gathering chefs
                     const endpoint = currentTab === 'recipes' 
                         ? `https://pantry-pal-jur7.onrender.com/api/recipes/search?q=${query}`
                         : `https://pantry-pal-jur7.onrender.com/api/recipes`;
 
                     const response = await fetch(endpoint);
                     allResults = await response.json();
-
                     renderResults(allResults, query);
                 } catch (err) {
-                    console.error("Search failed:", err);
-                    grid.innerHTML = `<p class="col-span-full text-center text-red-400">Error connecting to kitchen server.</p>`;
+                    console.error(err);
+                    grid.innerHTML = `<p class="col-span-full text-center text-red-400">Connection error.</p>`;
                 }
             }, 400);
         }
@@ -142,14 +145,12 @@
             
             if (currentTab === 'recipes') {
                 if (data.length === 0) {
-                    grid.innerHTML = `<p class="col-span-full text-center py-10 text-gray-400">No dishes named "${query}" found.</p>`;
+                    grid.innerHTML = `<p class="col-span-full text-center py-10 text-gray-400">No dishes found.</p>`;
                     return;
                 }
                 grid.innerHTML = data.map(r => `
-                    <div onclick="openRecipeModal('${r._id}')" class="bg-white rounded-[2.5rem] border border-gray-100 overflow-hidden shadow-sm hover:shadow-md active:scale-95 transition-all cursor-pointer search-result-animate group">
-                        <div class="h-48 overflow-hidden">
-                            <img src="${r.image || '../default.png'}" class="w-full h-full object-cover group-hover:scale-105 transition-transform">
-                        </div>
+                    <div onclick="openRecipeModal('${r._id}')" class="bg-white rounded-[2.5rem] border border-gray-100 overflow-hidden shadow-sm active:scale-95 transition-all cursor-pointer search-result-animate group">
+                        <div class="h-48 overflow-hidden"><img src="${r.image || '../default.png'}" class="w-full h-full object-cover group-hover:scale-105 transition-transform"></div>
                         <div class="p-6">
                             <h3 class="font-bold text-gray-900 truncate">${r.title}</h3>
                             <p class="text-coral font-bold text-xs mt-2">@${r.author?.username || 'chef'}</p>
@@ -157,11 +158,9 @@
                     </div>
                 `).join('');
             } else {
-                // Chef Search: Extract unique authors and filter by their username (@tag)
                 const uniqueChefs = [];
                 const chefNames = new Set();
                 
-                // Your backend stores author objects inside recipes, so we extract them here
                 data.forEach(r => {
                     const chef = r.author;
                     if (chef && !chefNames.has(chef.username) && chef.username.toLowerCase().includes(query.toLowerCase())) {
@@ -171,7 +170,7 @@
                 });
 
                 if (uniqueChefs.length === 0) {
-                    grid.innerHTML = `<p class="col-span-full text-center py-10 text-gray-400">No chefs found with tag "@${query}"</p>`;
+                    grid.innerHTML = `<p class="col-span-full text-center py-10 text-gray-400">No chefs found.</p>`;
                     return;
                 }
 
@@ -182,9 +181,9 @@
                         </div>
                         <div class="flex-grow">
                             <h3 class="font-bold text-gray-900 leading-none">@${chef.username}</h3>
-                            <p class="text-[10px] text-coral font-black uppercase mt-1 tracking-widest">Verified Chef</p>
+                            <p class="text-[10px] text-coral font-black uppercase mt-1 tracking-widest tracking-tighter">Verified Chef</p>
                         </div>
-                        <button onclick="window.location.href='profilepage.html'" class="text-white font-bold text-xs bg-coral px-4 py-2.5 rounded-xl shadow-md shadow-orange-100 active:scale-90 transition-all">Profile</button>
+                        <button onclick="location.href='profilepage.html?id=${chef._id || chef}'" class="text-white font-bold text-xs bg-coral px-4 py-2.5 rounded-xl shadow-md shadow-orange-100 active:scale-90 transition-all">Profile</button>
                     </div>
                 `).join('');
             }
@@ -201,6 +200,12 @@
             document.getElementById('modalIngredients').innerHTML = (recipe.ingredients || []).map(i => `<li>${i}</li>`).join('');
             document.getElementById('modalInstructions').innerHTML = (recipe.instructions || []).map(s => `<li>${s}</li>`).join('');
             
+            // Fixed Profile redirection from inside recipe modal
+            document.getElementById('modalVisitBtn').onclick = () => {
+                const authorId = recipe.author?._id || recipe.author;
+                location.href = `profilepage.html?id=${authorId}`;
+            };
+
             document.getElementById('recipeModal').classList.remove('hidden');
             document.body.style.overflow = 'hidden';
             lucide.createIcons();
@@ -215,24 +220,12 @@
             currentTab = type;
             const recipeBtn = document.getElementById('recipeBtn');
             const chefBtn = document.getElementById('chefBtn');
-
-            if (type === 'recipes') {
-                recipeBtn.className = "flex-1 py-3 rounded-xl font-bold transition-all bg-white shadow-sm text-gray-900";
-                chefBtn.className = "flex-1 py-3 rounded-xl font-bold transition-all text-gray-400";
-                document.getElementById('searchInput').placeholder = "Search lasagna, pasta, or dishes...";
-            } else {
-                chefBtn.className = "flex-1 py-3 rounded-xl font-bold transition-all bg-white shadow-sm text-gray-900";
-                recipeBtn.className = "flex-1 py-3 rounded-xl font-bold transition-all text-gray-400";
-                document.getElementById('searchInput').placeholder = "Search chefs by @username...";
-            }
+            recipeBtn.className = type === 'recipes' ? "flex-1 py-3 rounded-xl font-bold transition-all bg-white shadow-sm text-gray-900" : "flex-1 py-3 rounded-xl font-bold transition-all text-gray-400";
+            chefBtn.className = type === 'chefs' ? "flex-1 py-3 rounded-xl font-bold transition-all bg-white shadow-sm text-gray-900" : "flex-1 py-3 rounded-xl font-bold transition-all text-gray-400";
             handleSearch(); 
         }
 
-        function handleLogout() {
-            localStorage.clear();
-            window.location.href = '../index.html';
-        }
-
+        function handleLogout() { localStorage.clear(); window.location.href = '../index.html'; }
         lucide.createIcons();
     </script>
 </body>
