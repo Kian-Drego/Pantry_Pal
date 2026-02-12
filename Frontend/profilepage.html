@@ -14,11 +14,15 @@
         .bg-coral { background-color: #E97D5B; }
         .sidebar-item:hover { color: #E97D5B; transform: translateX(4px); }
         .tab-active { color: #111827; border-bottom: 4px solid #E97D5B; }
+        
         .modal-animate { animation: modalIn 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
         @keyframes modalIn {
             from { opacity: 0; transform: translate(-50%, -48%) scale(0.95); }
             to { opacity: 1; transform: translate(-50%, -50%) scale(1); }
         }
+
+        .modal-scroll::-webkit-scrollbar { width: 4px; }
+        .modal-scroll::-webkit-scrollbar-thumb { background: #E97D5B; border-radius: 10px; }
         ::-webkit-scrollbar { width: 0px; background: transparent; }
     </style>
 </head>
@@ -46,6 +50,14 @@
         <button onclick="handleLogout()" class="p-2 text-gray-400"><i data-lucide="log-out"></i></button>
     </div>
 
+    <nav class="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-100 flex justify-around items-center p-4 z-[100] pb-6">
+        <a href="homepage.html" class="text-gray-400"><i data-lucide="home"></i></a>
+        <a href="search.html" class="text-gray-400"><i data-lucide="search"></i></a>
+        <a href="create.html" class="text-gray-400"><i data-lucide="plus-square"></i></a>
+        <a href="leaderboard.html" class="text-gray-400"><i data-lucide="trophy"></i></a>
+        <a href="profilepage.html" class="text-coral"><i data-lucide="user"></i></a>
+    </nav>
+
     <main class="flex-grow p-5 md:p-12 md:ml-72 bg-white min-h-screen pb-28 md:pb-12">
         <div class="flex flex-col items-center text-center max-w-4xl mx-auto mb-12">
             <div class="w-32 h-32 md:w-40 md:h-40 mb-6 rounded-full border-4 border-white shadow-xl overflow-hidden bg-gray-100 flex items-center justify-center relative">
@@ -54,36 +66,63 @@
             </div>
 
             <h1 id="displayFullName" class="text-2xl md:text-4xl brand-font text-gray-900 mb-1">Chef</h1>
-            <p id="displayUsername" class="text-coral font-bold text-sm mb-4">@...</p>
-            <p id="displayBio" class="text-gray-500 text-sm md:text-base max-w-xl px-4"></p>
+            <p id="displayUsername" class="text-coral font-bold text-sm mb-4 italic">@loading...</p>
+            <p id="displayBio" class="text-gray-500 text-sm md:text-base max-w-xl px-4 leading-relaxed"></p>
 
-            <button id="editProfileBtn" onclick="toggleEditModal()" class="hidden mt-6 px-8 py-2.5 border-2 border-gray-100 rounded-2xl font-bold text-gray-600 hover:border-coral hover:text-coral transition-all active:scale-95">
+            <button id="editProfileBtn" onclick="window.location.href='settings.html'" class="hidden mt-6 px-8 py-2.5 border-2 border-gray-100 rounded-2xl font-bold text-gray-600 hover:border-coral hover:text-coral transition-all active:scale-95">
                 Edit Profile
             </button>
 
-            <div class="grid grid-cols-4 gap-4 md:gap-12 mt-10 w-full max-w-lg">
-                <div class="text-center"><p id="recipeCount" class="text-lg md:text-xl font-bold">0</p><p class="text-[10px] text-gray-400 uppercase font-bold">Recipes</p></div>
-                <div class="text-center"><p id="followerCount" class="text-lg md:text-xl font-bold">0</p><p class="text-[10px] text-gray-400 uppercase font-bold">Followers</p></div>
-                <div class="text-center"><p id="followingCount" class="text-lg md:text-xl font-bold">0</p><p class="text-[10px] text-gray-400 uppercase font-bold">Following</p></div>
+            <div class="grid grid-cols-3 gap-8 md:gap-16 mt-10 w-full max-w-md">
+                <div class="text-center"><p id="recipeCount" class="text-lg md:text-2xl font-bold text-gray-900">0</p><p class="text-[10px] text-gray-400 uppercase font-black tracking-widest mt-1">Recipes</p></div>
+                <div class="text-center"><p id="followerCount" class="text-lg md:text-2xl font-bold text-gray-900">0</p><p class="text-[10px] text-gray-400 uppercase font-black tracking-widest mt-1">Followers</p></div>
+                <div class="text-center"><p id="followingCount" class="text-lg md:text-2xl font-bold text-gray-900">0</p><p class="text-[10px] text-gray-400 uppercase font-black tracking-widest mt-1">Following</p></div>
             </div>
         </div>
 
         <div class="max-w-5xl mx-auto">
             <div class="flex justify-center md:justify-start gap-10 border-b border-gray-100 mb-8 font-bold text-sm">
-                <button id="btnMyRecipes" onclick="switchTab('my')" class="tab-active pb-4 transition-all">Recipes</button>
-                <button id="btnSaved" onclick="switchTab('saved')" class="text-gray-400 pb-4 transition-all">Saved</button>
+                <button id="btnMyRecipes" onclick="switchTab('my')" class="tab-active pb-4 transition-all uppercase tracking-widest">Postings</button>
+                <button id="btnSaved" onclick="switchTab('saved')" class="text-gray-400 pb-4 transition-all uppercase tracking-widest">Bookmarked</button>
             </div>
-            <div id="recipeGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6"></div>
+            <div id="recipeGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8"></div>
         </div>
     </main>
 
+    <div id="recipeModal" class="fixed inset-0 z-[200] hidden">
+        <div class="absolute inset-0 bg-gray-900/60 backdrop-blur-sm" onclick="closeRecipeModal()"></div>
+        <div class="modal-content relative md:absolute top-0 md:top-1/2 left-0 md:left-1/2 md:-translate-x-1/2 md:-translate-y-1/2 bg-white w-full md:w-[95%] md:max-w-2xl h-full md:h-auto md:max-h-[90vh] md:rounded-[40px] shadow-2xl overflow-hidden flex flex-col modal-animate">
+            <button onclick="closeRecipeModal()" class="absolute top-5 right-5 z-[210] p-3 bg-black/20 backdrop-blur-md rounded-full text-white hover:bg-black/40">
+                <i data-lucide="x" class="w-6 h-6"></i>
+            </button>
+            <div class="flex-grow overflow-y-auto modal-scroll pb-24 md:pb-10">
+                <img id="modalImage" src="" class="w-full h-72 md:h-96 object-cover flex-shrink-0">
+                <div class="p-6 md:p-10">
+                    <h2 id="modalTitle" class="text-3xl brand-font text-gray-900 mb-2"></h2>
+                    <p id="modalAuthor" class="text-coral font-bold mb-6 italic"></p>
+                    <p id="modalDescription" class="text-gray-600 mb-10 leading-relaxed"></p>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-10">
+                        <div class="bg-orange-50/50 p-6 rounded-[2rem]">
+                            <h3 class="font-bold text-coral mb-4 flex items-center gap-2"><i data-lucide="shopping-basket" class="w-5 h-5"></i> Ingredients</h3>
+                            <ul id="modalIngredients" class="text-sm space-y-2 text-gray-700"></ul>
+                        </div>
+                        <div class="bg-gray-50 p-6 rounded-[2rem]">
+                            <h3 class="font-bold text-coral mb-4 flex items-center gap-2"><i data-lucide="chef-hat" class="w-5 h-5"></i> Steps</h3>
+                            <ol id="modalInstructions" class="text-sm space-y-3 text-gray-700 list-decimal ml-4"></ol>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script>
         const urlParams = new URLSearchParams(window.location.search);
-        const chefId = urlParams.get('id'); // Get ID from URL
+        const chefId = urlParams.get('id');
         const myUserId = localStorage.getItem('userId');
         const token = localStorage.getItem('token');
         
-        // Final targeted ID: Either the chef we are visiting, or ourselves
         const targetId = chefId || myUserId;
         const isOwnProfile = targetId === myUserId;
 
@@ -91,11 +130,10 @@
         let currentTab = 'my';
 
         async function initProfile() {
-            if (!isOwnProfile) {
-                document.getElementById('editProfileBtn').classList.add('hidden');
-                document.getElementById('btnSaved').classList.add('hidden'); // Hide "Saved" tab for others
-            } else {
+            if (isOwnProfile) {
                 document.getElementById('editProfileBtn').classList.remove('hidden');
+            } else {
+                document.getElementById('btnSaved').classList.add('hidden'); // Cannot see others' saves
             }
             
             await loadUserData();
@@ -111,7 +149,7 @@
                     const user = data.user;
                     document.getElementById('displayFullName').innerText = user.username;
                     document.getElementById('displayUsername').innerText = '@' + user.username;
-                    document.getElementById('displayBio').innerText = user.bio || 'Chef at PantryPal.';
+                    document.getElementById('displayBio').innerText = user.bio || 'Professional Chef at PantryPal.';
                     document.getElementById('followerCount').innerText = data.followerCount || 0;
                     document.getElementById('followingCount').innerText = data.followingCount || 0;
 
@@ -126,39 +164,75 @@
         }
 
         async function fetchAllRecipes() {
-            const res = await fetch('https://pantry-pal-jur7.onrender.com/api/recipes');
-            allRecipes = await res.json();
-            renderProfileFeed();
+            try {
+                const res = await fetch('https://pantry-pal-jur7.onrender.com/api/recipes');
+                allRecipes = await response = await res.json();
+                renderProfileFeed();
+            } catch (err) { console.error(err); }
         }
 
         function renderProfileFeed() {
             const grid = document.getElementById('recipeGrid');
-            // Filter: If My Profile, show my recipes or saved. If Chef, show only their recipes.
             const filtered = allRecipes.filter(r => {
-                const authorId = (r.author?._id || r.author);
+                const authorId = (r.author?._id || r.author).toString();
                 if (currentTab === 'my') return authorId === targetId;
-                return r.saves?.some(id => id.toString() === targetId);
+                return r.saves?.some(id => id.toString() === myUserId);
             });
 
-            document.getElementById('recipeCount').innerText = allRecipes.filter(r => (r.author?._id || r.author) === targetId).length;
+            document.getElementById('recipeCount').innerText = allRecipes.filter(r => (r.author?._id || r.author).toString() === targetId).length;
             
+            if (filtered.length === 0) {
+                grid.innerHTML = `<div class="col-span-full py-20 text-center text-gray-400 italic">No posts yet.</div>`;
+                return;
+            }
+
             grid.innerHTML = filtered.map(r => `
-                <div class="group relative bg-white rounded-[2.5rem] overflow-hidden border border-gray-100 shadow-sm active:scale-95 transition-all">
-                    <img src="${r.image || '../default.png'}" class="w-full h-48 object-cover">
-                    <div class="p-5">
-                        <h3 class="font-bold text-sm mb-1 truncate">${r.title}</h3>
-                        <div class="flex items-center gap-3 mt-3 text-gray-400 text-[10px]">
-                            <span class="flex items-center gap-1"><i data-lucide="heart" class="w-3 h-3"></i> ${r.likes || 0}</span>
+                <div onclick="openRecipeModal('${r._id}')" class="group bg-white rounded-[2.5rem] overflow-hidden border border-gray-100 shadow-sm hover:shadow-md active:scale-95 transition-all cursor-pointer">
+                    <div class="relative h-56 overflow-hidden">
+                        <img src="${r.image || '../default.png'}" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700">
+                        <div class="absolute top-4 right-4 bg-white/90 backdrop-blur-sm px-3 py-1 rounded-full text-[10px] font-black text-coral">
+                            ${r.likes || 0} LIKES
                         </div>
+                    </div>
+                    <div class="p-6">
+                        <h3 class="font-bold text-gray-900 truncate tracking-tight">${r.title}</h3>
+                        <p class="text-gray-400 text-[10px] mt-1 uppercase font-bold tracking-widest">${r.author?.username || 'Chef'}</p>
                     </div>
                 </div>`).join('');
             lucide.createIcons();
         }
 
+        function openRecipeModal(id) {
+            const recipe = allRecipes.find(r => r._id === id);
+            if (!recipe) return;
+
+            document.getElementById('modalImage').src = recipe.image || '../default.png';
+            document.getElementById('modalTitle').innerText = recipe.title;
+            document.getElementById('modalAuthor').innerText = `@${recipe.author?.username || 'chef'}`;
+            document.getElementById('modalDescription').innerText = recipe.description || 'No description provided.';
+            
+            document.getElementById('modalIngredients').innerHTML = (recipe.ingredients || []).map(i => 
+                `<li class="flex items-center gap-3"><div class="w-1.5 h-1.5 rounded-full bg-coral"></div>${i}</li>`
+            ).join('');
+            
+            document.getElementById('modalInstructions').innerHTML = (recipe.instructions || []).map(s => 
+                `<li class="pl-2">${s}</li>`
+            ).join('');
+
+            document.getElementById('recipeModal').classList.remove('hidden');
+            document.body.style.overflow = 'hidden';
+            lucide.createIcons();
+        }
+
+        function closeRecipeModal() {
+            document.getElementById('recipeModal').classList.add('hidden');
+            document.body.style.overflow = 'auto';
+        }
+
         function switchTab(tab) {
             currentTab = tab;
-            document.getElementById('btnMyRecipes').className = tab === 'my' ? 'tab-active pb-4 transition-all' : 'text-gray-400 pb-4 transition-all';
-            document.getElementById('btnSaved').className = tab === 'saved' ? 'tab-active pb-4 transition-all' : 'text-gray-400 pb-4 transition-all';
+            document.getElementById('btnMyRecipes').className = tab === 'my' ? 'tab-active pb-4 transition-all uppercase tracking-widest' : 'text-gray-400 pb-4 transition-all uppercase tracking-widest';
+            document.getElementById('btnSaved').className = tab === 'saved' ? 'tab-active pb-4 transition-all uppercase tracking-widest' : 'text-gray-400 pb-4 transition-all uppercase tracking-widest';
             renderProfileFeed();
         }
 
