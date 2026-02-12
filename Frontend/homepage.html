@@ -81,173 +81,189 @@
         </div>
     </div>
 
-    <script>
-        lucide.createIcons();
-        let allRecipes = [];
-        const currentUserId = localStorage.getItem('userId');
-        const token = localStorage.getItem('token');
+<script>
+    lucide.createIcons();
+    let allRecipes = [];
+    const currentUserId = localStorage.getItem('userId');
+    const token = localStorage.getItem('token');
 
-        // Fix 1: Improved Fetch with state management
-        async function fetchRecipes() {
-            const statusDiv = document.getElementById('feedStatus');
-            try {
-                const response = await fetch('https://pantry-pal-jur7.onrender.com/api/recipes');
-                if (!response.ok) throw new Error('Server unreachable');
-                
-                allRecipes = await response.json();
-                
-                if (allRecipes.length === 0) {
-                    statusDiv.innerHTML = `<h2 class="text-2xl brand-font text-gray-800">No recipes yet!</h2>`;
-                } else {
-                    statusDiv.remove(); // Remove loader
-                    renderFeed(allRecipes);
-                }
-            } catch (err) {
-                console.error("Feed error:", err);
-                statusDiv.innerHTML = `
-                    <i data-lucide="alert-circle" class="text-red-400 w-12 h-12 mx-auto mb-4"></i>
-                    <h2 class="text-2xl brand-font text-gray-800 mb-2">Connection Failed</h2>
-                    <button onclick="location.reload()" class="mt-4 px-6 py-2 bg-coral text-white rounded-xl font-bold">Try Again</button>
-                `;
-                lucide.createIcons();
+    async function fetchRecipes() {
+        const statusDiv = document.getElementById('feedStatus');
+        try {
+            // Added a cache-buster to ensure we get fresh data
+            const response = await fetch('https://pantry-pal-jur7.onrender.com/api/recipes?t=' + Date.now());
+            if (!response.ok) throw new Error('Server unreachable');
+            
+            allRecipes = await response.json();
+            
+            if (allRecipes.length === 0) {
+                statusDiv.innerHTML = `<h2 class="text-2xl brand-font text-gray-800">No recipes yet!</h2>`;
+            } else {
+                statusDiv.remove();
+                renderFeed(allRecipes);
             }
+        } catch (err) {
+            console.error("Feed error:", err);
+            statusDiv.innerHTML = `
+                <i data-lucide="alert-circle" class="text-red-400 w-12 h-12 mx-auto mb-4"></i>
+                <h2 class="text-2xl brand-font text-gray-800 mb-2">Connection Failed</h2>
+                <p class="text-gray-400 mb-4">The kitchen is taking too long to respond.</p>
+                <button onclick="location.reload()" class="px-6 py-2 bg-coral text-white rounded-xl font-bold hover:opacity-90 transition-all">Try Again</button>
+            `;
+            lucide.createIcons();
         }
+    }
 
-        function renderFeed(recipes) {
-            const container = document.getElementById('recipeFeed');
-            container.innerHTML = recipes.map(recipe => {
-                const isLiked = recipe.likedBy?.some(id => (id._id || id) === currentUserId);
-                return `
-                    <div onclick="openRecipeModal('${recipe._id}')" class="bg-white rounded-[2.5rem] border border-gray-100 overflow-hidden shadow-sm hover:shadow-xl transition-all cursor-pointer group">
-                        <div class="relative h-64 overflow-hidden">
-                            <img src="${recipe.image || '../default.png'}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">
-                        </div>
-                        <div class="p-6">
-                            <h3 class="text-xl font-bold text-gray-900 mb-2">${recipe.title}</h3>
-                            <p class="text-gray-500 text-sm line-clamp-2 mb-4">${recipe.description}</p>
-                            <div class="flex items-center justify-between pt-4 border-t border-gray-50">
-                                <span class="text-coral font-bold text-sm">@${recipe.author?.username || 'chef'}</span>
-                                <div class="flex items-center gap-1 ${isLiked ? 'text-red-500' : 'text-gray-400'}">
-                                    <i data-lucide="heart" class="w-4 h-4 ${isLiked ? 'fill-current' : ''}"></i>
-                                    <span class="text-xs font-bold">${recipe.likes || 0}</span>
-                                </div>
+    function renderFeed(recipes) {
+        const container = document.getElementById('recipeFeed');
+        container.innerHTML = recipes.map(recipe => {
+            // Robust check for likes
+            const isLiked = recipe.likedBy?.some(id => (id._id || id).toString() === currentUserId);
+            return `
+                <div onclick="openRecipeModal('${recipe._id}')" class="bg-white rounded-[2.5rem] border border-gray-100 overflow-hidden shadow-sm hover:shadow-xl transition-all cursor-pointer group">
+                    <div class="relative h-64 overflow-hidden">
+                        <img src="${recipe.image || '../default.png'}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">
+                    </div>
+                    <div class="p-6">
+                        <h3 class="text-xl font-bold text-gray-900 mb-2">${recipe.title}</h3>
+                        <p class="text-gray-500 text-sm line-clamp-2 mb-4">${recipe.description}</p>
+                        <div class="flex items-center justify-between pt-4 border-t border-gray-50">
+                            <span class="text-coral font-bold text-sm">@${recipe.author?.username || 'chef'}</span>
+                            <div class="flex items-center gap-1 ${isLiked ? 'text-red-500' : 'text-gray-400'}">
+                                <i data-lucide="heart" class="w-4 h-4 ${isLiked ? 'fill-current' : ''}"></i>
+                                <span class="text-xs font-bold">${recipe.likes || 0}</span>
                             </div>
                         </div>
                     </div>
-                `;
-            }).join('');
-            lucide.createIcons();
-        }
+                </div>
+            `;
+        }).join('');
+        lucide.createIcons();
+    }
 
-        function openRecipeModal(recipeId) {
-            const recipe = allRecipes.find(r => r._id === recipeId);
-            if (!recipe) return;
+    function openRecipeModal(recipeId) {
+        const recipe = allRecipes.find(r => r._id === recipeId);
+        if (!recipe) return;
 
-            document.getElementById('modalImage').src = recipe.image || '../default.png';
-            document.getElementById('modalTitle').innerText = recipe.title;
-            document.getElementById('modalAuthor').innerText = `@${recipe.author?.username || 'chef'}`;
-            document.getElementById('modalDescription').innerText = recipe.description;
-            document.getElementById('modalIngredients').innerHTML = recipe.ingredients.map(i => `<li>${i}</li>`).join('');
-            document.getElementById('modalInstructions').innerHTML = recipe.instructions.map(s => `<li>${s}</li>`).join('');
+        document.getElementById('modalImage').src = recipe.image || '../default.png';
+        document.getElementById('modalTitle').innerText = recipe.title;
+        document.getElementById('modalAuthor').innerText = `@${recipe.author?.username || 'chef'}`;
+        document.getElementById('modalDescription').innerText = recipe.description;
+        document.getElementById('modalIngredients').innerHTML = (recipe.ingredients || []).map(i => `<li>${i}</li>`).join('');
+        document.getElementById('modalInstructions').innerHTML = (recipe.instructions || []).map(s => `<li>${s}</li>`).join('');
+        
+        // Like State
+        const isLiked = recipe.likedBy?.some(id => (id._id || id).toString() === currentUserId);
+        document.getElementById('modalLikeCount').innerText = recipe.likes || 0;
+        updateLikeUI(isLiked);
+        document.getElementById('modalLikeBtn').onclick = () => toggleLike(recipe._id);
+
+        // Follow State
+        updateFollowButton(recipe.author);
+
+        document.getElementById('recipeModal').classList.remove('hidden');
+        document.body.style.overflow = 'hidden';
+        lucide.createIcons();
+    }
+
+    function updateFollowButton(author) {
+        const followPlaceholder = document.getElementById('followBtnPlaceholder');
+        if (author && author._id !== currentUserId) {
+            // Robust check using .toString()
+            const isFollowing = (author.followers || []).some(id => (id._id || id).toString() === currentUserId);
             
-            // Like Logic
-            const isLiked = recipe.likedBy?.some(id => (id._id || id) === currentUserId);
-            document.getElementById('modalLikeCount').innerText = recipe.likes || 0;
-            updateLikeUI(isLiked);
-            document.getElementById('modalLikeBtn').onclick = () => toggleLike(recipe._id);
-
-            // Follow Logic
-            updateFollowButton(recipe.author);
-
-            document.getElementById('recipeModal').classList.remove('hidden');
-            document.body.style.overflow = 'hidden';
-            lucide.createIcons();
+            followPlaceholder.innerHTML = `
+                <button id="followBtn" onclick="toggleFollow('${author._id}')" 
+                    class="px-4 py-1.5 rounded-full text-sm font-bold border-2 border-coral transition-all 
+                    ${isFollowing ? 'bg-coral text-white' : 'text-coral hover:bg-coral hover:text-white'}">
+                    ${isFollowing ? 'Following' : 'Follow'}
+                </button>
+            `;
+        } else {
+            followPlaceholder.innerHTML = '';
         }
+    }
 
-        function updateFollowButton(author) {
-            const followPlaceholder = document.getElementById('followBtnPlaceholder');
-            if (author && author._id !== currentUserId) {
-                const isFollowing = author.followers?.some(id => (id._id || id) === currentUserId);
-                followPlaceholder.innerHTML = `
-                    <button id="followBtn" onclick="toggleFollow('${author._id}')" 
-                        class="px-4 py-1.5 rounded-full text-sm font-bold border-2 border-coral transition-all 
-                        ${isFollowing ? 'bg-coral text-white' : 'text-coral hover:bg-coral hover:text-white'}">
-                        ${isFollowing ? 'Following' : 'Follow'}
-                    </button>
-                `;
-            } else {
-                followPlaceholder.innerHTML = '';
+    async function toggleLike(recipeId) {
+        if (!currentUserId) return alert("Login to like!");
+        try {
+            const response = await fetch(`https://pantry-pal-jur7.onrender.com/api/recipes/like/${recipeId}`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ userId: currentUserId })
+            });
+            const data = await response.json();
+            if (response.ok) {
+                const recipe = allRecipes.find(r => r._id === recipeId);
+                recipe.likes = data.likes;
+                recipe.likedBy = data.likedBy;
+                document.getElementById('modalLikeCount').innerText = data.likes;
+                updateLikeUI(data.isLiked);
+                renderFeed(allRecipes);
             }
-        }
+        } catch (err) { console.error(err); }
+    }
 
-        async function toggleLike(recipeId) {
-            if (!currentUserId) return alert("Login to like!");
-            try {
-                const response = await fetch(`https://pantry-pal-jur7.onrender.com/api/recipes/like/${recipeId}`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ userId: currentUserId })
-                });
-                const data = await response.json();
-                if (response.ok) {
-                    const recipe = allRecipes.find(r => r._id === recipeId);
-                    recipe.likes = data.likes;
-                    recipe.likedBy = data.likedBy;
-                    document.getElementById('modalLikeCount').innerText = data.likes;
-                    updateLikeUI(data.isLiked);
-                    renderFeed(allRecipes);
-                }
-            } catch (err) { console.error(err); }
+    function updateLikeUI(isLiked) {
+        const btn = document.getElementById('modalLikeBtn');
+        const icon = document.getElementById('modalLikeIcon');
+        if (isLiked) {
+            btn.className = "flex items-center gap-2 px-5 py-2.5 rounded-2xl font-bold border-2 border-red-500 bg-red-500 text-white transition-all";
+            icon.classList.add('fill-current');
+        } else {
+            btn.className = "flex items-center gap-2 px-5 py-2.5 rounded-2xl font-bold border-2 border-gray-100 text-gray-400 hover:border-red-200 transition-all";
+            icon.classList.remove('fill-current');
         }
+    }
 
-        function updateLikeUI(isLiked) {
-            const btn = document.getElementById('modalLikeBtn');
-            const icon = document.getElementById('modalLikeIcon');
-            if (isLiked) {
-                btn.className = "flex items-center gap-2 px-5 py-2.5 rounded-2xl font-bold border-2 border-red-500 bg-red-500 text-white transition-all";
-                icon.classList.add('fill-current');
-            } else {
-                btn.className = "flex items-center gap-2 px-5 py-2.5 rounded-2xl font-bold border-2 border-gray-100 text-gray-400 hover:border-red-200 transition-all";
-                icon.classList.remove('fill-current');
-            }
-        }
+    async function toggleFollow(targetUserId) {
+        if (!currentUserId || !token) return alert("Login to follow!");
+        const followBtn = document.getElementById('followBtn');
+        
+        // Visual feedback immediately
+        followBtn.disabled = true;
+        followBtn.opacity = "0.7";
 
-        async function toggleFollow(targetUserId) {
-            if (!currentUserId || !token) return alert("Login to follow!");
-            try {
-                const response = await fetch(`https://pantry-pal-jur7.onrender.com/api/auth/follow/${targetUserId}`, {
-                    method: 'POST',
-                    headers: { 
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${token}`
-                    },
-                    body: JSON.stringify({ currentUserId })
-                });
-                const data = await response.json();
-                if (response.ok) {
-                    // Update all local references to this chef
-                    allRecipes.forEach(recipe => {
-                        if (recipe.author && recipe.author._id === targetUserId) {
-                            if (data.isFollowing) {
-                                if (!recipe.author.followers.includes(currentUserId)) 
-                                    recipe.author.followers.push(currentUserId);
-                            } else {
-                                recipe.author.followers = recipe.author.followers.filter(id => (id._id || id) !== currentUserId);
-                            }
+        try {
+            const response = await fetch(`https://pantry-pal-jur7.onrender.com/api/auth/follow/${targetUserId}`, {
+                method: 'POST',
+                headers: { 
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify({ currentUserId })
+            });
+            const data = await response.json();
+            
+            if (response.ok) {
+                // Update local memory for ALL recipes by this author
+                allRecipes.forEach(recipe => {
+                    if (recipe.author && recipe.author._id === targetUserId) {
+                        if (data.isFollowing) {
+                            if (!recipe.author.followers.some(id => id.toString() === currentUserId)) 
+                                recipe.author.followers.push(currentUserId);
+                        } else {
+                            recipe.author.followers = recipe.author.followers.filter(id => id.toString() !== currentUserId);
                         }
-                    });
-                    const updatedAuthor = allRecipes.find(r => r.author._id === targetUserId).author;
-                    updateFollowButton(updatedAuthor);
-                }
-            } catch (err) { console.error("Follow error:", err); }
+                    }
+                });
+                
+                const updatedAuthor = allRecipes.find(r => r.author._id === targetUserId).author;
+                updateFollowButton(updatedAuthor);
+            }
+        } catch (err) { 
+            console.error("Follow error:", err); 
+        } finally {
+            followBtn.disabled = false;
         }
+    }
 
-        function closeRecipeModal() {
-            document.getElementById('recipeModal').classList.add('hidden');
-            document.body.style.overflow = 'auto';
-        }
+    function closeRecipeModal() {
+        document.getElementById('recipeModal').classList.add('hidden');
+        document.body.style.overflow = 'auto';
+    }
 
-        fetchRecipes();
-    </script>
+    fetchRecipes();
+</script>
 </body>
 </html>

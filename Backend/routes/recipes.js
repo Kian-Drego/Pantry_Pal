@@ -98,3 +98,17 @@ router.delete('/:id', async (req, res) => {
 });
 
 module.exports = router;
+
+router.get('/', async (req, res) => {
+  try {
+    // Crucial: We must populate the followers list of the author
+    const recipes = await Recipe.find()
+      .populate({
+        path: 'author',
+        select: 'username followers profilePic'
+      });
+    res.json(recipes);
+  } catch (err) {
+    res.status(500).json({ error: "Could not fetch recipes" });
+  }
+});
