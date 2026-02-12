@@ -36,7 +36,7 @@
         <div class="text-3xl brand-font text-coral mb-12">PantryPal</div>
         <nav class="space-y-6 flex-grow text-gray-500 font-semibold">
             <a href="homepage.html" class="flex items-center gap-4 px-5 py-2 sidebar-item transition-all"><i data-lucide="home"></i> Home</a>
-            <a href="search.html" class="flex items-center gap-4 bg-coral text-white px-5 py-4 rounded-2xl shadow-lg shadow-orange-100"><i data-lucide="search"></i> Search</a>
+            <a href="search.html" class="flex items-center gap-4 bg-coral text-white px-5 py-4 rounded-2xl shadow-lg shadow-orange-100 transition-all"><i data-lucide="search"></i> Search</a>
             <a href="create.html" class="flex items-center gap-4 px-5 py-2 sidebar-item transition-all"><i data-lucide="plus-square"></i> Create</a>
             <a href="leaderboard.html" class="flex items-center gap-4 px-5 py-2 sidebar-item transition-all"><i data-lucide="trophy"></i> Leaderboard</a>
             <a href="analytics.html" class="flex items-center gap-4 px-5 py-2 sidebar-item transition-all"><i data-lucide="bar-chart-2"></i> Analytics</a>
@@ -60,8 +60,14 @@
         </div>
 
         <div class="mt-6 p-1.5 bg-gray-50 rounded-[1.5rem] flex w-full max-w-5xl border border-gray-100">
-            <button id="recipeBtn" onclick="setTab('recipes')" class="flex-1 py-2.5 rounded-xl font-bold transition-all bg-white shadow-sm text-gray-900">Recipes</button>
-            <button id="chefBtn" onclick="setTab('chefs')" class="flex-1 py-2.5 rounded-xl font-bold transition-all text-gray-400">Chefs</button>
+            <button id="recipeBtn" onclick="setTab('recipes')" 
+                class="flex-1 py-2.5 rounded-xl font-bold transition-all bg-white shadow-sm text-gray-900">
+                Recipes
+            </button>
+            <button id="chefBtn" onclick="setTab('chefs')" 
+                class="flex-1 py-2.5 rounded-xl font-bold transition-all text-gray-400">
+                Chefs
+            </button>
         </div>
 
         <div id="resultsGrid" class="mt-8 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6"></div>
@@ -75,7 +81,7 @@
     <div id="recipeModal" class="fixed inset-0 z-[150] hidden">
         <div class="absolute inset-0 bg-gray-900/60 backdrop-blur-sm" onclick="closeRecipeModal()"></div>
         <div class="modal-content relative md:absolute top-0 md:top-1/2 left-0 md:left-1/2 md:-translate-x-1/2 md:-translate-y-1/2 bg-white w-full md:w-[95%] md:max-w-2xl h-full md:h-auto md:max-h-[90vh] md:rounded-[40px] shadow-2xl overflow-hidden flex flex-col modal-animate">
-            <button onclick="closeRecipeModal()" class="absolute top-5 right-5 z-[160] p-3 bg-black/20 backdrop-blur-md rounded-full text-white hover:bg-black/40"><i data-lucide="x"></i></button>
+            <button onclick="closeRecipeModal()" class="absolute top-5 right-5 z-[160] p-3 bg-black/20 backdrop-blur-md rounded-full text-white hover:bg-black/40 transition-all"><i data-lucide="x"></i></button>
             
             <div class="flex-grow overflow-y-auto modal-scroll pb-24 md:pb-10">
                 <img id="modalImage" class="w-full h-72 md:h-96 object-cover">
@@ -91,7 +97,7 @@
                                 <span id="modalLikeCount">0</span>
                             </button>
                             <button id="modalSaveBtn" onclick="handleSave()" class="p-4 rounded-2xl border-2 border-gray-100 bg-gray-50 text-gray-400 active:scale-90">
-                                <i data-lucide="bookmark" id="modalSaveIcon" class="w-5 h-5"></i>
+                                <i data-lucide="bookmark" id="modalSaveIcon" class="w-6 h-6"></i>
                             </button>
                         </div>
                     </div>
@@ -107,7 +113,7 @@
                         </div>
                     </div>
                     <div class="border-t border-gray-100 pt-8">
-                        <h3 class="font-bold text-gray-900 mb-4 flex items-center gap-2"><i data-lucide="message-circle" class="w-5 h-5 text-coral"></i> Discussion</h3>
+                        <h3 class="font-bold text-gray-900 mb-4 flex items-center gap-2"><i data-lucide="message-circle" class="w-5 h-5 text-coral"></i> Chef's Table</h3>
                         <div id="commentsContainer" class="space-y-4 mb-6 max-h-40 overflow-y-auto"></div>
                         <div class="flex gap-3 items-center bg-gray-50 p-2 rounded-2xl border border-gray-100">
                             <input type="text" id="commentInput" placeholder="Write a comment..." class="flex-grow p-3 bg-transparent outline-none text-sm">
@@ -161,7 +167,7 @@
         if (currentTab === 'recipes') {
             if (data.length === 0) { grid.innerHTML = `<p class="col-span-full text-center py-10 text-gray-400">No results for "${query}"</p>`; return; }
             grid.innerHTML = data.map(r => `
-                <div onclick="openRecipeModal('${r._id}')" class="bg-white rounded-[2.5rem] border border-gray-100 overflow-hidden shadow-sm active:scale-95 transition-all cursor-pointer group">
+                <div onclick="openRecipeModal('${r._id}')" class="group bg-white rounded-[2.5rem] border border-gray-100 overflow-hidden shadow-sm active:scale-95 transition-all cursor-pointer">
                     <div class="h-48 overflow-hidden"><img src="${r.image || '../default.png'}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"></div>
                     <div class="p-6">
                         <h3 class="font-bold text-gray-900 truncate">${r.title}</h3>
@@ -187,9 +193,9 @@
                     </div>
                     <div class="flex-grow">
                         <h3 class="font-bold text-gray-900 leading-none">@${chef.username}</h3>
-                        <p class="text-[10px] text-coral font-black uppercase mt-1 tracking-widest">Verified Chef</p>
+                        <p class="text-[10px] text-coral font-black uppercase mt-1">Verified Chef</p>
                     </div>
-                    <button onclick="location.href='profilepage.html?id=${chef._id}'" class="text-white font-bold text-xs bg-coral px-5 py-2.5 rounded-xl shadow-md shadow-orange-100 active:scale-90 transition-all">Profile</button>
+                    <button onclick="location.href='profilepage.html?id=${chef._id}'" class="text-white font-bold text-xs bg-coral px-4 py-2.5 rounded-xl shadow-md active:scale-90 transition-all">Profile</button>
                 </div>`).join('');
         }
         lucide.createIcons();
@@ -217,7 +223,8 @@
         renderComments(recipe.comments || []);
 
         document.getElementById('recipeModal').classList.remove('hidden');
-        document.body.style.overflow = 'hidden'; lucide.createIcons();
+        document.body.style.overflow = 'hidden'; 
+        lucide.createIcons();
     }
 
     async function handleLike() {
@@ -279,7 +286,23 @@
     }
 
     function closeRecipeModal() { document.getElementById('recipeModal').classList.add('hidden'); document.body.style.overflow = 'auto'; }
-    function setTab(tab) { currentTab = tab; handleSearch(); }
+    
+    function setTab(type) {
+        currentTab = type;
+        const recipeBtn = document.getElementById('recipeBtn');
+        const chefBtn = document.getElementById('chefBtn');
+
+        if (type === 'recipes') {
+            recipeBtn.className = "flex-1 py-2.5 rounded-xl font-bold transition-all bg-white shadow-sm text-gray-900";
+            chefBtn.className = "flex-1 py-2.5 rounded-xl font-bold transition-all text-gray-400";
+        } else {
+            chefBtn.className = "flex-1 py-2.5 rounded-xl font-bold transition-all bg-white shadow-sm text-gray-900";
+            recipeBtn.className = "flex-1 py-2.5 rounded-xl font-bold transition-all text-gray-400";
+        }
+        
+        handleSearch(); // Refresh search with new tab
+    }
+
     function handleLogout() { localStorage.clear(); window.location.href = '../index.html'; }
     lucide.createIcons();
 </script>
