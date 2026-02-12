@@ -69,7 +69,7 @@
 
         <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
             <div class="lg:col-span-12 bg-white border border-gray-100 rounded-[2.5rem] p-8 shadow-sm">
-                <h3 class="text-xl font-bold text-gray-900 mb-4 text-center">Engagement Distribution</h3>
+                <h3 class="text-xl font-bold text-gray-900 mb-4 text-center">Engagement Trends</h3>
                 <div class="relative h-[400px] w-full">
                     <canvas id="engagementChart"></canvas>
                 </div>
@@ -113,48 +113,47 @@
             
             if (engagementChart) engagementChart.destroy();
 
-            // REGISTER PLUGIN to show values next to bars
+            // REGISTER PLUGIN
             Chart.register(ChartDataLabels);
 
             engagementChart = new Chart(ctx, {
-                type: 'bar',
+                type: 'line', // Changed to line
                 data: {
                     labels: ['Recipes', 'Likes', 'Saves', 'Comments'],
                     datasets: [{
                         data: [data.recipes, data.likes, data.saves, data.comments],
-                        backgroundColor: [
-                            'rgba(233, 125, 91, 0.3)',
-                            'rgba(233, 125, 91, 0.5)',
-                            'rgba(233, 125, 91, 0.7)',
-                            'rgba(233, 125, 91, 1)'
-                        ],
                         borderColor: '#E97D5B',
-                        borderWidth: 2,
-                        borderRadius: 15,
-                        borderSkipped: false,
-                        barThickness: 50
+                        backgroundColor: 'rgba(233, 125, 91, 0.1)',
+                        borderWidth: 4,
+                        pointBackgroundColor: '#E97D5B',
+                        pointBorderColor: '#fff',
+                        pointBorderWidth: 2,
+                        pointRadius: 8,
+                        pointHoverRadius: 10,
+                        tension: 0.4, // Smooth curve
+                        fill: true // Light shaded area under the line
                     }]
                 },
                 options: {
-                    indexAxis: 'y', // MAKES IT HORIZONTAL for better label visibility
+                    indexAxis: 'y', // This flips the line graph horizontally
                     responsive: true,
                     maintainAspectRatio: false,
                     layout: {
-                        padding: { right: 50 } // Space for the numbers at the end
+                        padding: { right: 60, top: 20, bottom: 20 }
                     },
                     plugins: {
                         legend: { display: false },
                         datalabels: {
-                            anchor: 'end',
+                            anchor: 'center',
                             align: 'right',
-                            color: '#E97D5B',
+                            offset: 15,
+                            color: '#111827',
                             font: {
                                 family: 'Outfit',
                                 weight: 'bold',
                                 size: 14
                             },
                             formatter: (value) => {
-                                // Shortens big numbers (e.g. 10000 -> 10k)
                                 return value >= 1000 ? (value/1000).toFixed(1) + 'k' : value;
                             }
                         }
@@ -162,8 +161,8 @@
                     scales: {
                         x: {
                             beginAtZero: true,
-                            grid: { display: false },
-                            ticks: { display: false } // Hide bottom axis since we have labels on bars
+                            grid: { color: '#f3f4f6' },
+                            ticks: { display: false }
                         },
                         y: {
                             grid: { display: false },
