@@ -12,8 +12,8 @@
         .brand-font { font-family: 'Fredoka One', cursive; }
         .text-coral { color: #E97D5B; }
         .bg-coral { background-color: #E97D5B; }
-        .border-coral { border-color: #E97D5B; }
         .sidebar-item:hover { color: #E97D5B; transform: translateX(4px); }
+        .tab-active { color: #111827; border-bottom: 4px solid #E97D5B; }
         .modal-animate { animation: modalIn 0.3s ease-out; }
         @keyframes modalIn {
             from { opacity: 0; transform: translate(-50%, -48%) scale(0.95); }
@@ -34,20 +34,18 @@
             <a href="profilepage.html" class="flex items-center gap-4 bg-coral text-white px-5 py-4 rounded-2xl shadow-lg"><i data-lucide="user"></i> Profile</a>
         </nav>
         <div class="border-t border-gray-100 pt-8">
-            <a href="../index.html" class="flex items-center gap-4 px-5 py-2 text-gray-500 font-semibold sidebar-item transition-all"><i data-lucide="log-out"></i> Log out</a>
+            <button onclick="handleLogout()" class="flex items-center gap-4 px-5 py-2 text-gray-500 font-semibold sidebar-item transition-all w-full">
+                <i data-lucide="log-out"></i> Log out
+            </button>
         </div>
     </aside>
 
     <main class="flex-grow p-6 md:p-12 md:ml-72 bg-white min-h-screen pb-24 md:pb-12">
         <div class="flex flex-col items-center text-center max-w-4xl mx-auto mb-12">
-            <input type="file" id="avatarInput" accept="image/*" class="hidden" onchange="previewImage(event)">
-            <div class="group relative w-32 h-32 md:w-40 md:h-40 mb-6 cursor-pointer" onclick="document.getElementById('avatarInput').click()">
+            <div class="group relative w-32 h-32 md:w-40 md:h-40 mb-6">
                 <div class="w-full h-full bg-gray-100 rounded-full border-4 border-white shadow-xl flex items-center justify-center text-gray-300 overflow-hidden">
                     <i id="placeholderIcon" data-lucide="user" class="w-12 h-12 md:w-16 md:h-16"></i>
                     <img id="profilePreview" src="" class="hidden w-full h-full object-cover">
-                </div>
-                <div class="absolute inset-0 bg-black/30 rounded-full flex items-center justify-center text-white opacity-0 group-hover:opacity-100 transition-opacity">
-                    <i data-lucide="camera" class="w-6 h-6"></i>
                 </div>
             </div>
 
@@ -55,67 +53,54 @@
             <p id="displayUsername" class="text-coral font-bold mb-4">@...</p>
             <p id="displayBio" class="text-gray-500 text-base md:text-lg max-w-xl px-4"></p>
 
-            <button onclick="toggleEditModal()" class="mt-6 px-8 py-3 border-2 border-gray-100 rounded-2xl font-bold text-gray-700 hover:text-coral hover:border-coral transition-all">Edit Profile</button>
-
             <div class="flex gap-8 md:gap-12 mt-10">
                 <div class="text-center"><p id="recipeCount" class="text-xl font-bold">0</p><p class="text-xs text-gray-400 uppercase">Recipes</p></div>
-                <div class="text-center"><p id="followerCount" class="text-xl font-bold">0</p><p class="text-xs text-gray-400 uppercase">Followers</p></div>
-                <div class="text-center"><p id="followingCount" class="text-xl font-bold">0</p><p class="text-xs text-gray-400 uppercase">Following</p></div>
+                <div class="text-center"><p id="saveCount" class="text-xl font-bold">0</p><p class="text-xs text-gray-400 uppercase">Saved</p></div>
             </div>
         </div>
 
         <div class="max-w-5xl mx-auto">
-            <div class="flex justify-center md:justify-start gap-10 border-b border-gray-100 mb-8 md:mb-10 pb-1 font-bold">
-                <button class="text-gray-900 border-b-4 border-coral pb-4">My Recipes</button>
+            <div class="flex justify-center md:justify-start gap-10 border-b border-gray-100 mb-8 pb-1 font-bold">
+                <button id="btnMyRecipes" onclick="switchTab('my')" class="tab-active pb-4 transition-all">My Recipes</button>
+                <button id="btnSaved" onclick="switchTab('saved')" class="text-gray-400 pb-4 hover:text-coral transition-all">Saved Recipes</button>
             </div>
             
             <div id="recipeGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            </div>
+                </div>
         </div>
     </main>
-
-    <div id="editModal" class="fixed inset-0 z-[60] hidden">
-        <div class="absolute inset-0 bg-gray-900/40 backdrop-blur-sm" onclick="toggleEditModal()"></div>
-        <div class="modal-content absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-white w-[90%] max-w-lg rounded-[32px] p-8 modal-animate">
-            <h2 class="text-2xl brand-font mb-6">Edit Profile</h2>
-            <form onsubmit="saveProfile(event)" class="space-y-4">
-                <input type="text" id="editUsername" placeholder="Username" class="w-full p-4 bg-gray-50 rounded-2xl outline-none focus:ring-2 focus:ring-coral/20">
-                <textarea id="editBio" rows="3" placeholder="Bio" class="w-full p-4 bg-gray-50 rounded-2xl outline-none resize-none"></textarea>
-                <div class="flex gap-4">
-                    <button type="button" onclick="toggleEditModal()" class="flex-1 py-4 font-bold text-gray-500">Cancel</button>
-                    <button type="submit" class="flex-1 py-4 bg-coral text-white rounded-2xl font-bold">Save</button>
-                </div>
-            </form>
-        </div>
-    </div>
 
     <div id="recipeViewModal" class="fixed inset-0 z-[70] hidden">
         <div class="absolute inset-0 bg-gray-900/40 backdrop-blur-sm" onclick="closeRecipeView()"></div>
         <div class="modal-content absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-white w-[95%] max-w-2xl rounded-[32px] shadow-2xl overflow-hidden max-h-[90vh] flex flex-col modal-animate">
-            <div id="modalImageContainer" class="relative h-64 flex-shrink-0">
+            <div class="relative h-64 flex-shrink-0">
                 <img id="modalImage" src="" class="w-full h-full object-cover">
                 <button onclick="closeRecipeView()" class="absolute top-4 right-4 p-2 bg-white/90 rounded-full shadow-lg"><i data-lucide="x" class="w-6 h-6"></i></button>
             </div>
             <div class="p-8 overflow-y-auto">
                 <h2 id="modalTitle" class="text-3xl brand-font text-gray-900 mb-4"></h2>
-                <p id="modalDescription" class="text-gray-500 mb-8"></p>
                 <div class="grid md:grid-cols-2 gap-8">
-                    <div><h3 class="font-bold mb-4 text-coral">Ingredients</h3><ul id="modalIngredients" class="list-disc ml-5 space-y-1 text-gray-600"></ul></div>
-                    <div><h3 class="font-bold mb-4 text-coral">Instructions</h3><ol id="modalInstructions" class="list-decimal ml-5 space-y-2 text-gray-600"></ol></div>
+                    <div><h3 class="font-bold mb-2 text-coral">Ingredients</h3><ul id="modalIngredients" class="list-disc ml-5 text-gray-600"></ul></div>
+                    <div><h3 class="font-bold mb-2 text-coral">Instructions</h3><ol id="modalInstructions" class="list-decimal ml-5 text-gray-600"></ol></div>
                 </div>
             </div>
         </div>
     </div>
 
     <script>
-        lucide.createIcons();
         const userId = localStorage.getItem('userId');
         const token = localStorage.getItem('token');
-        let myRecipes = [];
+        let allRecipes = [];
+        let currentTab = 'my';
 
         if (!userId || !token) window.location.href = "Loginpage.html";
 
-        async function loadProfile() {
+        async function initProfile() {
+            await loadUserData();
+            await fetchAllRecipes();
+        }
+
+        async function loadUserData() {
             try {
                 const response = await fetch(`https://pantry-pal-jur7.onrender.com/api/auth/profile/${userId}`, {
                     headers: { 'Authorization': `Bearer ${token}` }
@@ -126,73 +111,79 @@
                     document.getElementById('displayFullName').innerText = user.username;
                     document.getElementById('displayUsername').innerText = '@' + user.username;
                     document.getElementById('displayBio').innerText = user.bio || 'No bio yet.';
-                    document.getElementById('recipeCount').innerText = data.recipeCount || 0;
-                    document.getElementById('followerCount').innerText = user.followers?.length || 0;
-                    document.getElementById('followingCount').innerText = user.following?.length || 0;
-
                     if (user.profilePic) {
                         const img = document.getElementById('profilePreview');
                         img.src = user.profilePic;
                         img.classList.remove('hidden');
                         document.getElementById('placeholderIcon').classList.add('hidden');
                     }
-                    fetchUserRecipes();
                 }
             } catch (err) { console.error(err); }
         }
 
-        async function fetchUserRecipes() {
+        async function fetchAllRecipes() {
             try {
                 const response = await fetch('https://pantry-pal-jur7.onrender.com/api/recipes');
-                const all = await response.json();
-                myRecipes = all.filter(r => r.author && r.author._id === userId);
-                
-                const grid = document.getElementById('recipeGrid');
-                if (myRecipes.length === 0) {
-                    grid.innerHTML = '<div class="col-span-full py-20 text-center text-gray-400">No recipes yet.</div>';
-                    return;
-                }
-
-                grid.innerHTML = myRecipes.map(r => {
-                    // Always show image, use default if none provided
-                    const recipeImage = r.image || "../default.png";
-                    return `
-                        <div class="group relative bg-white rounded-3xl overflow-hidden border border-gray-100 shadow-sm hover:shadow-md cursor-pointer transition-all">
-                            <div onclick="openRecipeView('${r._id}')">
-                                <img src="${recipeImage}" class="w-full h-48 object-cover">
-                                <div class="p-5">
-                                    <h3 class="font-bold mb-1">${r.title}</h3>
-                                    <p class="text-sm text-gray-500 line-clamp-2">${r.description}</p>
-                                </div>
-                            </div>
-                            <button onclick="deleteRecipe('${r._id}')" class="absolute top-3 right-3 p-2 bg-white/90 text-red-500 rounded-full opacity-0 group-hover:opacity-100 transition-all z-20">
-                                <i data-lucide="trash-2" class="w-4 h-4"></i>
-                            </button>
-                        </div>
-                    `;
-                }).join('');
-                lucide.createIcons();
+                allRecipes = await response.json();
+                renderProfileFeed();
             } catch (err) { console.error(err); }
         }
 
-        function openRecipeView(id) {
-            const recipe = myRecipes.find(r => r._id === id);
-            const modalImgContainer = document.getElementById('modalImageContainer');
+        function renderProfileFeed() {
+            const grid = document.getElementById('recipeGrid');
             
-            // Revert: always show image container and use default if needed
-            modalImgContainer.classList.remove('hidden');
-            document.getElementById('modalImage').src = recipe.image || '../default.png';
+            const filtered = allRecipes.filter(r => {
+                if (currentTab === 'my') {
+                    return r.author && (r.author._id || r.author) === userId;
+                } else {
+                    return r.saves && r.saves.some(id => id.toString() === userId);
+                }
+            });
 
-            document.getElementById('modalTitle').innerText = recipe.title;
-            document.getElementById('modalDescription').innerText = recipe.description;
-            document.getElementById('modalIngredients').innerHTML = recipe.ingredients.map(i => `<li>${i}</li>`).join('');
-            document.getElementById('modalInstructions').innerHTML = recipe.instructions.map(s => `<li>${s}</li>`).join('');
-            document.getElementById('recipeViewModal').classList.remove('hidden');
+            // Update header counts
+            if (currentTab === 'my') document.getElementById('recipeCount').innerText = filtered.length;
+            const globalSaves = allRecipes.filter(r => r.saves && r.saves.some(id => id.toString() === userId)).length;
+            document.getElementById('saveCount').innerText = globalSaves;
+
+            if (filtered.length === 0) {
+                grid.innerHTML = `<div class="col-span-full py-20 text-center text-gray-400">No recipes found here.</div>`;
+                return;
+            }
+
+            grid.innerHTML = filtered.map(r => `
+                <div class="group relative bg-white rounded-3xl overflow-hidden border border-gray-100 shadow-sm hover:shadow-md transition-all">
+                    <div onclick="openRecipeView('${r._id}')" class="cursor-pointer">
+                        <img src="${r.image || '../default.png'}" class="w-full h-48 object-cover">
+                        <div class="p-5">
+                            <h3 class="font-bold mb-1">${r.title}</h3>
+                            <p class="text-sm text-gray-500 line-clamp-1">${r.description || ''}</p>
+                        </div>
+                    </div>
+                    ${currentTab === 'my' ? `
+                    <button onclick="deleteRecipe('${r._id}')" class="absolute top-3 right-3 p-2 bg-white/90 text-red-500 rounded-full opacity-0 group-hover:opacity-100 transition-all">
+                        <i data-lucide="trash-2" class="w-4 h-4"></i>
+                    </button>` : ''}
+                </div>
+            `).join('');
             lucide.createIcons();
         }
 
-        function closeRecipeView() { document.getElementById('recipeViewModal').classList.add('hidden'); }
-        function toggleEditModal() { document.getElementById('editModal').classList.toggle('hidden'); }
+        function switchTab(tab) {
+            currentTab = tab;
+            document.getElementById('btnMyRecipes').className = tab === 'my' ? 'tab-active pb-4 transition-all' : 'text-gray-400 pb-4 hover:text-coral transition-all';
+            document.getElementById('btnSaved').className = tab === 'saved' ? 'tab-active pb-4 transition-all' : 'text-gray-400 pb-4 hover:text-coral transition-all';
+            renderProfileFeed();
+        }
+
+        function openRecipeView(id) {
+            const recipe = allRecipes.find(r => r._id === id);
+            document.getElementById('modalImage').src = recipe.image || '../default.png';
+            document.getElementById('modalTitle').innerText = recipe.title;
+            document.getElementById('modalDescription').innerText = recipe.description || '';
+            document.getElementById('modalIngredients').innerHTML = (recipe.ingredients || []).map(i => `<li>${i}</li>`).join('');
+            document.getElementById('modalInstructions').innerHTML = (recipe.instructions || []).map(s => `<li>${s}</li>`).join('');
+            document.getElementById('recipeViewModal').classList.remove('hidden');
+        }
 
         async function deleteRecipe(id) {
             if (!confirm("Delete this recipe?")) return;
@@ -200,31 +191,17 @@
                 method: 'DELETE',
                 headers: { 'Authorization': `Bearer ${token}` }
             });
-            if (res.ok) loadProfile();
+            if (res.ok) fetchAllRecipes();
         }
 
-        async function saveProfile(e) {
-            e.preventDefault();
-            const data = { username: document.getElementById('editUsername').value, bio: document.getElementById('editBio').value };
-            const res = await fetch(`https://pantry-pal-jur7.onrender.com/api/auth/profile/${userId}`, {
-                method: 'PUT',
-                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-                body: JSON.stringify(data)
-            });
-            if (res.ok) { toggleEditModal(); loadProfile(); }
+        function handleLogout() {
+            localStorage.clear();
+            window.location.href = "../index.html";
         }
 
-        function previewImage(e) {
-            const reader = new FileReader();
-            reader.onload = () => {
-                document.getElementById('profilePreview').src = reader.result;
-                document.getElementById('profilePreview').classList.remove('hidden');
-                document.getElementById('placeholderIcon').classList.add('hidden');
-            };
-            reader.readAsDataURL(e.target.files[0]);
-        }
+        function closeRecipeView() { document.getElementById('recipeViewModal').classList.add('hidden'); }
 
-        loadProfile();
+        window.onload = initProfile;
     </script>
 </body>
 </html>
