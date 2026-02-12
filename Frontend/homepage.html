@@ -13,22 +13,21 @@
         .text-coral { color: #E97D5B; }
         .bg-coral { background-color: #E97D5B; }
         
-        /* Modal Animation - Slide up from bottom on mobile, scale on desktop */
         .modal-animate { animation: modalIn 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
         @keyframes modalIn {
-            from { opacity: 0; transform: translate(-50%, -40%) scale(0.95); }
+            from { opacity: 0; transform: translate(-50%, -45%) scale(0.95); }
             to { opacity: 1; transform: translate(-50%, -50%) scale(1); }
         }
 
         @media (max-width: 768px) {
-            .modal-animate { animation: mobileModalIn 0.4s cubic-bezier(0.4, 0, 0.2, 1); }
+            .modal-animate { animation: mobileModalIn 0.35s cubic-bezier(0.4, 0, 0.2, 1); }
             @keyframes mobileModalIn {
                 from { transform: translateY(100%); }
                 to { transform: translateY(0); }
             }
         }
 
-        /* Custom Scrollbar for the modal content */
+        /* Essential for scrolling long content inside modal */
         .modal-scroll::-webkit-scrollbar { width: 4px; }
         .modal-scroll::-webkit-scrollbar-thumb { background: #E97D5B; border-radius: 10px; }
         ::-webkit-scrollbar { width: 0px; background: transparent; }
@@ -40,14 +39,14 @@
         <div class="text-3xl brand-font text-coral mb-12">PantryPal</div>
         <nav class="space-y-6 flex-grow">
             <a href="homepage.html" class="flex items-center gap-4 bg-coral text-white px-5 py-4 rounded-2xl font-semibold shadow-lg shadow-orange-100"><i data-lucide="home"></i> Home</a>
-            <a href="search.html" class="flex items-center gap-4 px-5 py-2 text-gray-500 font-semibold hover:text-coral transition-all"><i data-lucide="search"></i> Search</a>
-            <a href="create.html" class="flex items-center gap-4 px-5 py-2 text-gray-500 font-semibold hover:text-coral transition-all"><i data-lucide="plus-square"></i> Create</a>
-            <a href="leaderboard.html" class="flex items-center gap-4 px-5 py-2 text-gray-500 font-semibold hover:text-coral transition-all"><i data-lucide="trophy"></i> Leaderboard</a>
-            <a href="analytics.html" class="flex items-center gap-4 px-5 py-2 text-gray-500 font-semibold hover:text-coral transition-all"><i data-lucide="bar-chart-2"></i> Analytics</a>
-            <a href="profilepage.html" class="flex items-center gap-4 px-5 py-2 text-gray-500 font-semibold hover:text-coral transition-all"><i data-lucide="user"></i> Profile</a>
+            <a href="search.html" class="flex items-center gap-4 px-5 py-2 text-gray-500 font-semibold sidebar-item transition-all"><i data-lucide="search"></i> Search</a>
+            <a href="create.html" class="flex items-center gap-4 px-5 py-2 text-gray-500 font-semibold sidebar-item transition-all"><i data-lucide="plus-square"></i> Create</a>
+            <a href="leaderboard.html" class="flex items-center gap-4 px-5 py-2 text-gray-500 font-semibold sidebar-item transition-all"><i data-lucide="trophy"></i> Leaderboard</a>
+            <a href="analytics.html" class="flex items-center gap-4 px-5 py-2 text-gray-500 font-semibold sidebar-item transition-all"><i data-lucide="bar-chart-2"></i> Analytics</a>
+            <a href="profilepage.html" class="flex items-center gap-4 px-5 py-2 text-gray-500 font-semibold sidebar-item transition-all"><i data-lucide="user"></i> Profile</a>
         </nav>
         <div class="border-t border-gray-100 pt-8">
-            <button onclick="handleLogout()" class="flex items-center gap-4 px-5 py-2 text-gray-500 font-semibold hover:text-coral transition-all w-full text-left">
+            <button onclick="handleLogout()" class="flex items-center gap-4 px-5 py-2 text-gray-500 font-semibold sidebar-item transition-all w-full text-left">
                 <i data-lucide="log-out"></i> Log out
             </button>
         </div>
@@ -80,7 +79,7 @@
         
         <div class="modal-content relative md:absolute top-0 md:top-1/2 left-0 md:left-1/2 md:-translate-x-1/2 md:-translate-y-1/2 bg-white w-full md:w-[95%] md:max-w-2xl h-full md:h-auto md:max-h-[90vh] md:rounded-[40px] shadow-2xl overflow-hidden flex flex-col modal-animate">
             
-            <button onclick="closeRecipeModal()" class="absolute top-5 right-5 z-[160] p-3 bg-black/30 backdrop-blur-md rounded-full text-white hover:bg-black/50 transition-all">
+            <button onclick="closeRecipeModal()" class="absolute top-5 right-5 z-[160] p-3 bg-black/20 backdrop-blur-md rounded-full text-white hover:bg-black/40 transition-all">
                 <i data-lucide="x" class="w-6 h-6"></i>
             </button>
 
@@ -92,51 +91,47 @@
                 <div class="p-6 md:p-10">
                     <div class="flex flex-col md:flex-row md:justify-between md:items-start gap-4 mb-8">
                         <div>
-                            <h2 id="modalTitle" class="text-3xl md:text-4xl brand-font text-gray-900 leading-tight"></h2>
-                            <div class="flex items-center gap-3 mt-3">
-                                <p id="modalAuthor" class="text-coral font-bold text-base"></p>
+                            <h2 id="modalTitle" class="text-3xl brand-font text-gray-900"></h2>
+                            <div class="flex items-center gap-3 mt-2">
+                                <p id="modalAuthor" class="text-coral font-bold text-sm"></p>
                                 <div id="followBtnPlaceholder"></div>
                             </div>
                         </div>
                         
                         <div class="flex gap-2">
-                            <button id="modalLikeBtn" onclick="handleToggleLike(activeRecipeId)" class="flex items-center justify-center gap-2 px-6 py-3 rounded-2xl font-bold border-2 transition-all bg-gray-50 text-gray-500 border-gray-100 active:scale-90">
+                            <button id="modalLikeBtn" onclick="toggleLike(activeRecipeId)" class="flex-1 md:flex-none flex items-center justify-center gap-2 px-6 py-3 rounded-2xl font-bold border-2 transition-all">
                                 <i data-lucide="heart" id="modalLikeIcon" class="w-5 h-5"></i>
                                 <span id="modalLikeCount">0</span>
                             </button>
-                            <button id="modalSaveBtn" onclick="handleToggleSave(activeRecipeId)" class="p-4 rounded-2xl border-2 border-gray-100 bg-gray-50 text-gray-400 active:scale-90">
-                                <i data-lucide="bookmark" id="modalSaveIcon" class="w-5 h-5"></i>
+                            <button id="modalSaveBtn" onclick="toggleSave(activeRecipeId)" class="p-4 rounded-2xl border-2 border-gray-100 bg-gray-50 text-gray-400">
+                                <i data-lucide="bookmark" id="modalSaveIcon" class="w-6 h-6"></i>
                             </button>
                         </div>
                     </div>
 
-                    <p id="modalDescription" class="text-gray-600 text-base md:text-lg mb-10 leading-relaxed italic"></p>
+                    <p id="modalDescription" class="text-gray-600 mb-10 leading-relaxed italic"></p>
                     
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-12">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-10">
                         <div class="bg-orange-50/50 p-6 rounded-[2rem]">
-                            <h3 class="font-bold mb-4 text-coral text-xl flex items-center gap-2 tracking-tight">
-                                <i data-lucide="shopping-basket" class="w-5 h-5"></i> Ingredients
-                            </h3>
-                            <ul id="modalIngredients" class="space-y-3 text-gray-700 text-sm md:text-base"></ul>
+                            <h3 class="font-bold mb-4 text-coral flex items-center gap-2"><i data-lucide="shopping-basket" class="w-5 h-5"></i> Ingredients</h3>
+                            <ul id="modalIngredients" class="space-y-2 text-gray-700 text-sm md:text-base"></ul>
                         </div>
                         <div class="bg-gray-50 p-6 rounded-[2rem]">
-                            <h3 class="font-bold mb-4 text-coral text-xl flex items-center gap-2 tracking-tight">
-                                <i data-lucide="chef-hat" class="w-5 h-5"></i> Steps
-                            </h3>
-                            <ol id="modalInstructions" class="space-y-4 text-gray-700 text-sm md:text-base list-decimal ml-5"></ol>
+                            <h3 class="font-bold mb-4 text-coral flex items-center gap-2"><i data-lucide="chef-hat" class="w-5 h-5"></i> Instructions</h3>
+                            <ol id="modalInstructions" class="space-y-3 text-gray-700 text-sm md:text-base list-decimal ml-5"></ol>
                         </div>
                     </div>
 
-                    <div class="border-t border-gray-100 pt-10">
-                        <h3 class="font-bold text-gray-900 text-xl mb-6 flex items-center gap-2">
-                            <i data-lucide="message-circle" class="w-6 h-6 text-coral"></i> Chef's Table
+                    <div class="border-t border-gray-100 pt-8">
+                        <h3 class="font-bold text-gray-900 mb-6 flex items-center gap-2">
+                            <i data-lucide="message-circle" class="w-5 h-5 text-coral"></i> Discussion
                         </h3>
-                        <div id="commentsContainer" class="space-y-5 mb-8"></div>
+                        <div id="commentsContainer" class="space-y-4 mb-6"></div>
                         
-                        <div class="flex gap-3 items-center bg-gray-50 p-3 rounded-[1.5rem] border border-gray-100">
-                            <input type="text" id="commentInput" placeholder="Add to the conversation..." class="flex-grow p-3 bg-transparent outline-none text-base">
-                            <button onclick="handlePostComment()" class="bg-coral text-white p-4 rounded-2xl font-bold shadow-lg shadow-orange-200 transition-transform active:scale-90">
-                                <i data-lucide="send" class="w-6 h-6"></i>
+                        <div class="flex gap-2 items-center bg-gray-50 p-2 rounded-2xl border border-gray-100">
+                            <input type="text" id="commentInput" placeholder="Write a comment..." class="flex-grow p-3 bg-transparent outline-none text-sm">
+                            <button onclick="postComment()" class="bg-coral text-white p-3 rounded-xl font-bold transition-transform active:scale-90">
+                                <i data-lucide="send" class="w-5 h-5"></i>
                             </button>
                         </div>
                     </div>
@@ -159,7 +154,7 @@
             const response = await fetch('https://pantry-pal-jur7.onrender.com/api/recipes?t=' + Date.now());
             allRecipes = await response.json();
             if (allRecipes.length === 0) {
-                if(statusDiv) statusDiv.innerHTML = `<h2 class="text-2xl brand-font text-gray-800">The pantry is empty!</h2>`;
+                if(statusDiv) statusDiv.innerHTML = `<h2 class="text-2xl brand-font text-gray-800">No recipes yet!</h2>`;
             } else {
                 if(statusDiv) statusDiv.remove();
                 renderFeed(allRecipes);
@@ -173,18 +168,18 @@
         container.innerHTML = recipes.map(recipe => {
             const isLiked = recipe.likedBy?.some(id => (id._id || id).toString() === currentUserId);
             return `
-                <div onclick="openRecipeModal('${recipe._id}')" class="bg-white rounded-[3rem] border border-gray-100 overflow-hidden shadow-sm active:scale-[0.98] transition-all cursor-pointer group">
-                    <div class="relative h-64 md:h-72 overflow-hidden">
-                        <img src="${recipe.image || '../default.png'}" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-[1.5s]">
+                <div onclick="openRecipeModal('${recipe._id}')" class="bg-white rounded-[2.5rem] border border-gray-100 overflow-hidden shadow-sm active:scale-95 transition-all cursor-pointer group">
+                    <div class="relative h-64 md:h-64 overflow-hidden">
+                        <img src="${recipe.image || '../default.png'}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700">
                     </div>
-                    <div class="p-7">
-                        <h3 class="text-xl md:text-2xl font-bold text-gray-900 mb-2 truncate">${recipe.title}</h3>
-                        <p class="text-gray-500 text-sm line-clamp-2 mb-5">${recipe.description}</p>
-                        <div class="flex items-center justify-between pt-5 border-t border-gray-50">
-                            <span class="text-coral font-bold text-sm tracking-tight">@${recipe.author?.username || 'chef'}</span>
-                            <div class="flex items-center gap-1.5 ${isLiked ? 'text-red-500' : 'text-gray-400'}">
-                                <i data-lucide="heart" class="w-5 h-5 ${isLiked ? 'fill-current' : ''}"></i>
-                                <span class="text-sm font-black">${recipe.likes || 0}</span>
+                    <div class="p-6">
+                        <h3 class="text-lg md:text-xl font-bold text-gray-900 mb-2 truncate">${recipe.title}</h3>
+                        <p class="text-gray-500 text-xs md:text-sm line-clamp-2 mb-4">${recipe.description}</p>
+                        <div class="flex items-center justify-between pt-4 border-t border-gray-50">
+                            <span class="text-coral font-bold text-xs">@${recipe.author?.username || 'chef'}</span>
+                            <div class="flex items-center gap-1 ${isLiked ? 'text-red-500' : 'text-gray-400'}">
+                                <i data-lucide="heart" class="w-4 h-4 ${isLiked ? 'fill-current' : ''}"></i>
+                                <span class="text-xs font-bold">${recipe.likes || 0}</span>
                             </div>
                         </div>
                     </div>
@@ -202,16 +197,8 @@
         document.getElementById('modalTitle').innerText = recipe.title;
         document.getElementById('modalAuthor').innerText = `@${recipe.author?.username || 'chef'}`;
         document.getElementById('modalDescription').innerText = recipe.description;
-        
-        // Full Ingredients
-        document.getElementById('modalIngredients').innerHTML = (recipe.ingredients || []).map(i => 
-            `<li class="flex items-start gap-3"><div class="w-2 h-2 rounded-full bg-coral mt-1.5 flex-shrink-0"></div>${i}</li>`
-        ).join('');
-        
-        // Full Instructions
-        document.getElementById('modalInstructions').innerHTML = (recipe.instructions || []).map(s => 
-            `<li class="pl-2">${s}</li>`
-        ).join('');
+        document.getElementById('modalIngredients').innerHTML = (recipe.ingredients || []).map(i => `<li class="flex items-center gap-2"><div class="w-1.5 h-1.5 rounded-full bg-coral"></div>${i}</li>`).join('');
+        document.getElementById('modalInstructions').innerHTML = (recipe.instructions || []).map(s => `<li>${s}</li>`).join('');
         
         updateLikeUI(recipe.likedBy?.some(id => (id._id || id).toString() === currentUserId));
         updateSaveUI(recipe.saves?.some(id => (id._id || id).toString() === currentUserId));
@@ -221,33 +208,33 @@
         renderComments(recipe.comments || []);
 
         document.getElementById('recipeModal').classList.remove('hidden');
-        document.body.style.overflow = 'hidden'; // Lock background scroll
+        document.body.style.overflow = 'hidden'; 
         lucide.createIcons();
     }
 
-    // --- REMADE FOLLOW SYSTEM ---
+    // --- FIXED FOLLOW SYSTEM ---
     function updateFollowButton(author) {
         const placeholder = document.getElementById('followBtnPlaceholder');
-        if (!author || (author._id || author).toString() === currentUserId) {
-            placeholder.innerHTML = '';
-            return;
-        }
+        if (!author) { placeholder.innerHTML = ''; return; }
+        
         const authorId = (author._id || author).toString();
+        if (authorId === currentUserId) { placeholder.innerHTML = ''; return; }
+
         const isFollowing = author.followers?.some(id => id.toString() === currentUserId);
         
         placeholder.innerHTML = `
-            <button id="followActionBtn" onclick="handleFollowToggle('${authorId}')" 
-                class="px-4 py-1.5 rounded-full text-[11px] font-black border-2 border-coral transition-all active:scale-90
+            <button id="realFollowBtn" onclick="executeFollow('${authorId}')" 
+                class="px-4 py-1.5 rounded-full text-[10px] font-black border-2 border-coral transition-all active:scale-90
                 ${isFollowing ? 'bg-coral text-white' : 'text-coral hover:bg-coral/10'}">
                 ${isFollowing ? 'Following' : '+ Follow'}
             </button>`;
     }
 
-    async function handleFollowToggle(targetUserId) {
-        const btn = document.getElementById('followActionBtn');
+    async function executeFollow(targetUserId) {
+        const btn = document.getElementById('realFollowBtn');
+        if (!btn || !token) return alert("Please log in to follow chefs!");
         btn.disabled = true;
-        btn.style.opacity = "0.5";
-        
+
         try {
             const response = await fetch(`https://pantry-pal-jur7.onrender.com/api/auth/follow/${targetUserId}`, {
                 method: 'POST',
@@ -256,7 +243,6 @@
             });
             const data = await response.json();
             if (response.ok) {
-                // Update local data array to sync all cards from this author
                 allRecipes.forEach(r => {
                     const authId = (r.author?._id || r.author).toString();
                     if (authId === targetUserId) {
@@ -268,14 +254,13 @@
                         }
                     }
                 });
-                // Re-render button for the specific modal open
-                const currentAuthor = allRecipes.find(r => r._id === activeRecipeId).author;
-                updateFollowButton(currentAuthor);
+                const updatedAuthor = allRecipes.find(r => r._id === activeRecipeId).author;
+                updateFollowButton(updatedAuthor);
             }
-        } catch (err) { console.error(err); } finally { btn.disabled = false; btn.style.opacity = "1"; }
+        } catch (err) { console.error(err); } finally { btn.disabled = false; }
     }
 
-    async function handleToggleLike(recipeId) {
+    async function toggleLike(recipeId) {
         try {
             const res = await fetch(`https://pantry-pal-jur7.onrender.com/api/recipes/like/${recipeId}`, {
                 method: 'POST',
@@ -306,7 +291,7 @@
         }
     }
 
-    async function handleToggleSave(recipeId) {
+    async function toggleSave(recipeId) {
         try {
             const res = await fetch(`https://pantry-pal-jur7.onrender.com/api/recipes/save/${recipeId}`, {
                 method: 'POST',
@@ -324,14 +309,17 @@
 
     function updateSaveUI(isSaved) {
         const btn = document.getElementById('modalSaveBtn');
+        const icon = document.getElementById('modalSaveIcon');
         if (isSaved) {
             btn.className = "p-4 rounded-2xl border-2 border-blue-500 bg-blue-500 text-white active:scale-90 transition-all";
+            icon.classList.add('fill-current');
         } else {
             btn.className = "p-4 rounded-2xl border-2 border-gray-100 bg-gray-50 text-gray-400 active:scale-90 transition-all";
+            icon.classList.remove('fill-current');
         }
     }
 
-    async function handlePostComment() {
+    async function postComment() {
         const input = document.getElementById('commentInput');
         if (!input.value.trim() || !activeRecipeId) return;
         try {
@@ -342,7 +330,8 @@
             });
             const updatedComments = await res.json();
             if (res.ok) {
-                allRecipes.find(r => r._id === activeRecipeId).comments = updatedComments;
+                const recipe = allRecipes.find(r => r._id === activeRecipeId);
+                recipe.comments = updatedComments;
                 renderComments(updatedComments);
                 input.value = '';
             }
@@ -352,7 +341,7 @@
     function renderComments(comments) {
         const container = document.getElementById('commentsContainer');
         if (!comments || comments.length === 0) {
-            container.innerHTML = '<p class="text-gray-400 text-sm italic text-center py-4">No seats taken at this table yet.</p>';
+            container.innerHTML = '<p class="text-gray-400 text-xs italic text-center py-4">No comments yet.</p>';
             return;
         }
         container.innerHTML = comments.map(c => `
@@ -365,7 +354,7 @@
     function handleLogout() { localStorage.clear(); window.location.href = '../index.html'; }
     function closeRecipeModal() { 
         document.getElementById('recipeModal').classList.add('hidden'); 
-        document.body.style.overflow = 'auto'; // Re-enable background scroll
+        document.body.style.overflow = 'auto'; 
     }
 
     window.onload = fetchRecipes;
