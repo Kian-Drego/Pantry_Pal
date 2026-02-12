@@ -33,9 +33,9 @@
             <a href="profilepage.html" class="flex items-center gap-4 px-5 py-2 text-gray-500 font-semibold sidebar-item transition-all"><i data-lucide="user"></i> Profile</a>
         </nav>
         <div class="border-t border-gray-100 pt-8">
-            <a href="#" onclick="handleLogout()" class="flex items-center gap-4 px-5 py-2 text-gray-500 font-semibold sidebar-item transition-all">
+            <button onclick="handleLogout()" class="flex items-center gap-4 px-5 py-2 text-gray-500 font-semibold sidebar-item transition-all w-full text-left">
                 <i data-lucide="log-out"></i> Log out
-            </a>
+            </button>
         </div>
     </aside>
 
@@ -162,16 +162,16 @@
         document.getElementById('modalIngredients').innerHTML = (recipe.ingredients || []).map(i => `<li>${i}</li>`).join('');
         document.getElementById('modalInstructions').innerHTML = (recipe.instructions || []).map(s => `<li>${s}</li>`).join('');
         
-        // Sync Likes
+        // Update Likes UI
         const isLiked = recipe.likedBy?.some(id => (id._id || id).toString() === currentUserId);
         document.getElementById('modalLikeCount').innerText = recipe.likes || 0;
         updateLikeUI(isLiked);
 
-        // Sync Saves
+        // Update Saves UI
         const isSaved = recipe.saves?.some(id => (id._id || id).toString() === currentUserId);
         updateSaveUI(isSaved);
 
-        // Sync Follow
+        // Update Follow UI
         updateFollowButton(recipe.author);
 
         // Load Comments
@@ -182,12 +182,11 @@
         lucide.createIcons();
     }
 
-    // --- LIKE SYSTEM ---
     async function toggleLike(recipeId) {
         try {
             const res = await fetch(`https://pantry-pal-jur7.onrender.com/api/recipes/like/${recipeId}`, {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
                 body: JSON.stringify({ userId: currentUserId })
             });
             const data = await res.json();
@@ -214,7 +213,6 @@
         }
     }
 
-    // --- SAVE SYSTEM ---
     async function toggleSave(recipeId) {
         try {
             const res = await fetch(`https://pantry-pal-jur7.onrender.com/api/recipes/save/${recipeId}`, {
@@ -243,16 +241,15 @@
         }
     }
 
-    // --- FOLLOW SYSTEM ---
     function updateFollowButton(author) {
         const placeholder = document.getElementById('followBtnPlaceholder');
-        if (!author || author._id === currentUserId) {
+        if (!author || (author._id || author).toString() === currentUserId) {
             placeholder.innerHTML = '';
             return;
         }
         const isFollowing = author.followers?.some(id => id.toString() === currentUserId);
         placeholder.innerHTML = `
-            <button id="followBtn" onclick="toggleFollow('${author._id}')" 
+            <button id="followBtn" onclick="toggleFollow('${(author._id || author).toString()}')" 
                 class="px-4 py-1.5 rounded-full text-sm font-bold border-2 border-coral transition-all 
                 ${isFollowing ? 'bg-coral text-white' : 'text-coral hover:bg-coral hover:text-white'}">
                 ${isFollowing ? 'Following' : 'Follow'}
@@ -272,29 +269,40 @@
             });
             const data = await response.json();
             if (response.ok) {
+                // Update local memory for all recipes by this author
                 allRecipes.forEach(r => {
-                    if (r.author && (r.author._id || r.author).toString() === targetUserId) {
-                        r.author.followers = data.isFollowing ? [...(r.author.followers || []), currentUserId] : r.author.followers.filter(id => id.toString() !== currentUserId);
+                    const authorId = (r.author?._id || r.author).toString();
+                    if (authorId === targetUserId) {
+                        if (!r.author.followers) r.author.followers = [];
+                        if (data.isFollowing) {
+                            if(!r.author.followers.includes(currentUserId)) r.author.followers.push(currentUserId);
+                        } else {
+                            r.author.followers = r.author.followers.filter(id => id.toString() !== currentUserId);
+                        }
                     }
                 });
-                updateFollowButton(allRecipes.find(r => r._id === activeRecipeId).author);
+                const updatedAuthor = allRecipes.find(r => (r.author?._id || r.author).toString() === targetUserId).author;
+                updateFollowButton(updatedAuthor);
             }
         } catch (err) { console.error(err); } finally { followBtn.disabled = false; }
     }
 
-    // --- COMMENT SYSTEM ---
     async function postComment() {
         const input = document.getElementById('commentInput');
-        if (!input.value.trim() || !activeRecipeId) return;
+        const text = input.value.trim();
+        const username = localStorage.getItem('username') || 'Chef';
+        if (!text || !activeRecipeId) return;
+
         try {
             const res = await fetch(`https://pantry-pal-jur7.onrender.com/api/recipes/comment/${activeRecipeId}`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-                body: JSON.stringify({ userId: currentUserId, username: localStorage.getItem('username'), text: input.value.trim() })
+                body: JSON.stringify({ userId: currentUserId, username, text })
             });
             const updatedComments = await res.json();
             if (res.ok) {
-                allRecipes.find(r => r._id === activeRecipeId).comments = updatedComments;
+                const recipe = allRecipes.find(r => r._id === activeRecipeId);
+                recipe.comments = updatedComments;
                 renderComments(updatedComments);
                 input.value = '';
             }
@@ -304,7 +312,7 @@
     function renderComments(comments) {
         const container = document.getElementById('commentsContainer');
         if (!comments || comments.length === 0) {
-            container.innerHTML = '<p class="text-gray-400 text-sm italic">No comments yet.</p>';
+            container.innerHTML = '<p class="text-gray-400 text-sm italic">No comments yet. Start the conversation!</p>';
             return;
         }
         container.innerHTML = comments.map(c => `
@@ -315,7 +323,10 @@
     }
 
     function handleLogout() { localStorage.clear(); window.location.href = '../index.html'; }
-    function closeRecipeModal() { document.getElementById('recipeModal').classList.add('hidden'); document.body.style.overflow = 'auto'; }
+    function closeRecipeModal() { 
+        document.getElementById('recipeModal').classList.add('hidden'); 
+        document.body.style.overflow = 'auto'; 
+    }
 
     window.onload = fetchRecipes;
 </script>

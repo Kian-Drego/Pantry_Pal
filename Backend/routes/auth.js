@@ -122,5 +122,28 @@ router.post('/follow/:id', async (req, res) => {
     res.status(500).json({ error: "Server error during follow action" });
   }
 });
+router.post('/follow/:id', async (req, res) => {
+  try {
+    const targetUserId = req.params.id; // The person being followed
+    const { currentUserId } = req.body; // You
 
+    const targetUser = await User.findById(targetUserId);
+    const isFollowing = targetUser.followers.includes(currentUserId);
+
+    const updateTarget = isFollowing 
+      ? { $pull: { followers: currentUserId } } 
+      : { $addToSet: { followers: currentUserId } };
+
+    const updateMe = isFollowing 
+      ? { $pull: { following: targetUserId } } 
+      : { $addToSet: { following: targetUserId } };
+
+    await User.findByIdAndUpdate(targetUserId, updateTarget);
+    await User.findByIdAndUpdate(currentUserId, updateMe);
+
+    res.json({ success: true, isFollowing: !isFollowing });
+  } catch (err) {
+    res.status(500).json({ success: false });
+  }
+});
 module.exports = router;
