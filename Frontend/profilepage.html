@@ -23,7 +23,7 @@
 </head>
 <body class="bg-gray-50 flex flex-col md:flex-row min-h-screen">
 
-    <aside class="hidden md:flex w-72 bg-white border-r border-gray-100 flex-col p-8 fixed h-full z-10">
+    <aside class="hidden md:flex w-72 bg-white border-r border-gray-100 flex flex-col p-8 fixed h-full z-10">
         <div class="text-3xl brand-font text-coral mb-12">PantryPal</div>
         <nav class="space-y-6 flex-grow text-gray-500 font-semibold">
             <a href="homepage.html" class="flex items-center gap-4 px-5 py-2 sidebar-item transition-all"><i data-lucide="home"></i> Home</a>
@@ -42,16 +42,14 @@
 
     <main class="flex-grow p-6 md:p-12 md:ml-72 bg-white min-h-screen pb-24 md:pb-12">
         <div class="flex flex-col items-center text-center max-w-4xl mx-auto mb-12">
-            <div class="group relative w-32 h-32 md:w-40 md:h-40 mb-6">
-                <div class="w-full h-full bg-gray-100 rounded-full border-4 border-white shadow-xl flex items-center justify-center text-gray-300 overflow-hidden">
-                    <i id="placeholderIcon" data-lucide="user" class="w-12 h-12 md:w-16 md:h-16"></i>
-                    <img id="profilePreview" src="" class="hidden w-full h-full object-cover">
-                </div>
+            <div class="w-32 h-32 md:w-40 md:h-40 mb-6 rounded-full border-4 border-white shadow-xl overflow-hidden bg-gray-100 flex items-center justify-center">
+                <i id="placeholderIcon" data-lucide="user" class="w-12 h-12 text-gray-300"></i>
+                <img id="profilePreview" src="" class="hidden w-full h-full object-cover">
             </div>
 
-            <h1 id="displayFullName" class="text-3xl md:text-4xl brand-font text-gray-900 mb-2">Loading...</h1>
+            <h1 id="displayFullName" class="text-3xl md:text-4xl brand-font text-gray-900 mb-2">Chef</h1>
             <p id="displayUsername" class="text-coral font-bold mb-4">@...</p>
-            <p id="displayBio" class="text-gray-500 text-base md:text-lg max-w-xl px-4"></p>
+            <p id="displayBio" class="text-gray-500 text-base max-w-xl"></p>
 
             <div class="flex gap-8 md:gap-12 mt-10">
                 <div class="text-center"><p id="recipeCount" class="text-xl font-bold">0</p><p class="text-xs text-gray-400 uppercase">Recipes</p></div>
@@ -64,24 +62,41 @@
                 <button id="btnMyRecipes" onclick="switchTab('my')" class="tab-active pb-4 transition-all">My Recipes</button>
                 <button id="btnSaved" onclick="switchTab('saved')" class="text-gray-400 pb-4 hover:text-coral transition-all">Saved Recipes</button>
             </div>
-            
-            <div id="recipeGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                </div>
+            <div id="recipeGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6"></div>
         </div>
     </main>
 
     <div id="recipeViewModal" class="fixed inset-0 z-[70] hidden">
         <div class="absolute inset-0 bg-gray-900/40 backdrop-blur-sm" onclick="closeRecipeView()"></div>
         <div class="modal-content absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-white w-[95%] max-w-2xl rounded-[32px] shadow-2xl overflow-hidden max-h-[90vh] flex flex-col modal-animate">
-            <div class="relative h-64 flex-shrink-0">
+            <div id="modalImageContainer" class="relative h-64 flex-shrink-0">
                 <img id="modalImage" src="" class="w-full h-full object-cover">
                 <button onclick="closeRecipeView()" class="absolute top-4 right-4 p-2 bg-white/90 rounded-full shadow-lg"><i data-lucide="x" class="w-6 h-6"></i></button>
             </div>
             <div class="p-8 overflow-y-auto">
-                <h2 id="modalTitle" class="text-3xl brand-font text-gray-900 mb-4"></h2>
-                <div class="grid md:grid-cols-2 gap-8">
-                    <div><h3 class="font-bold mb-2 text-coral">Ingredients</h3><ul id="modalIngredients" class="list-disc ml-5 text-gray-600"></ul></div>
-                    <div><h3 class="font-bold mb-2 text-coral">Instructions</h3><ol id="modalInstructions" class="list-decimal ml-5 text-gray-600"></ol></div>
+                <div class="flex justify-between items-start mb-4">
+                    <h2 id="modalTitle" class="text-3xl brand-font text-gray-900"></h2>
+                    <div class="flex gap-2">
+                        <button id="modalLikeBtn" class="flex items-center gap-2 px-4 py-2 rounded-2xl font-bold border-2 transition-all">
+                            <i data-lucide="heart" id="modalLikeIcon" class="w-5 h-5"></i>
+                            <span id="modalLikeCount">0</span>
+                        </button>
+                        <button id="modalEditBtn" class="hidden flex items-center gap-2 px-4 py-2 rounded-2xl font-bold border-2 border-gray-100 text-gray-500 hover:border-coral hover:text-coral transition-all">
+                            <i data-lucide="edit-3" class="w-5 h-5"></i>
+                        </button>
+                    </div>
+                </div>
+                
+                <p id="modalDescription" class="text-gray-500 mb-8"></p>
+                
+                <div class="grid md:grid-cols-2 gap-8 mb-8">
+                    <div><h3 class="font-bold mb-2 text-coral">Ingredients</h3><ul id="modalIngredients" class="list-disc ml-5 text-gray-600 space-y-1"></ul></div>
+                    <div><h3 class="font-bold mb-2 text-coral">Instructions</h3><ol id="modalInstructions" class="list-decimal ml-5 text-gray-600 space-y-2"></ol></div>
+                </div>
+
+                <div class="border-t pt-6">
+                    <h3 class="font-bold text-gray-900 mb-4">Comments (<span id="modalCommentCount">0</span>)</h3>
+                    <div id="modalComments" class="space-y-3"></div>
                 </div>
             </div>
         </div>
@@ -93,11 +108,12 @@
         let allRecipes = [];
         let currentTab = 'my';
 
-        if (!userId || !token) window.location.href = "Loginpage.html";
+        if (!userId || !token) window.location.href = "../index.html";
 
         async function initProfile() {
             await loadUserData();
             await fetchAllRecipes();
+            lucide.createIcons();
         }
 
         async function loadUserData() {
@@ -110,7 +126,7 @@
                     const user = data.user;
                     document.getElementById('displayFullName').innerText = user.username;
                     document.getElementById('displayUsername').innerText = '@' + user.username;
-                    document.getElementById('displayBio').innerText = user.bio || 'No bio yet.';
+                    document.getElementById('displayBio').innerText = user.bio || 'Sharing the love of cooking.';
                     if (user.profilePic) {
                         const img = document.getElementById('profilePreview');
                         img.src = user.profilePic;
@@ -131,22 +147,16 @@
 
         function renderProfileFeed() {
             const grid = document.getElementById('recipeGrid');
-            
             const filtered = allRecipes.filter(r => {
-                if (currentTab === 'my') {
-                    return r.author && (r.author._id || r.author) === userId;
-                } else {
-                    return r.saves && r.saves.some(id => id.toString() === userId);
-                }
+                if (currentTab === 'my') return r.author && (r.author._id || r.author) === userId;
+                return r.saves && r.saves.some(id => id.toString() === userId);
             });
 
-            // Update header counts
-            if (currentTab === 'my') document.getElementById('recipeCount').innerText = filtered.length;
-            const globalSaves = allRecipes.filter(r => r.saves && r.saves.some(id => id.toString() === userId)).length;
-            document.getElementById('saveCount').innerText = globalSaves;
+            document.getElementById('recipeCount').innerText = allRecipes.filter(r => (r.author?._id || r.author) === userId).length;
+            document.getElementById('saveCount').innerText = allRecipes.filter(r => r.saves?.some(id => id.toString() === userId)).length;
 
             if (filtered.length === 0) {
-                grid.innerHTML = `<div class="col-span-full py-20 text-center text-gray-400">No recipes found here.</div>`;
+                grid.innerHTML = `<div class="col-span-full py-20 text-center text-gray-400">Nothing to show yet.</div>`;
                 return;
             }
 
@@ -155,17 +165,87 @@
                     <div onclick="openRecipeView('${r._id}')" class="cursor-pointer">
                         <img src="${r.image || '../default.png'}" class="w-full h-48 object-cover">
                         <div class="p-5">
-                            <h3 class="font-bold mb-1">${r.title}</h3>
-                            <p class="text-sm text-gray-500 line-clamp-1">${r.description || ''}</p>
+                            <h3 class="font-bold mb-1 truncate">${r.title}</h3>
+                            <div class="flex items-center gap-3 mt-3 text-gray-400 text-xs">
+                                <span class="flex items-center gap-1"><i data-lucide="heart" class="w-3 h-3"></i> ${r.likes || 0}</span>
+                                <span class="flex items-center gap-1"><i data-lucide="message-circle" class="w-3 h-3"></i> ${r.comments?.length || 0}</span>
+                            </div>
                         </div>
                     </div>
-                    ${currentTab === 'my' ? `
-                    <button onclick="deleteRecipe('${r._id}')" class="absolute top-3 right-3 p-2 bg-white/90 text-red-500 rounded-full opacity-0 group-hover:opacity-100 transition-all">
-                        <i data-lucide="trash-2" class="w-4 h-4"></i>
-                    </button>` : ''}
+                    ${currentTab === 'my' ? `<button onclick="deleteRecipe('${r._id}')" class="absolute top-3 right-3 p-2 bg-white/90 text-red-500 rounded-full opacity-0 group-hover:opacity-100 transition-all shadow-sm"><i data-lucide="trash-2" class="w-4 h-4"></i></button>` : ''}
                 </div>
             `).join('');
             lucide.createIcons();
+        }
+
+        function openRecipeView(id) {
+            const recipe = allRecipes.find(r => r._id === id);
+            if (!recipe) return;
+
+            document.getElementById('modalImage').src = recipe.image || '../default.png';
+            document.getElementById('modalTitle').innerText = recipe.title;
+            document.getElementById('modalDescription').innerText = recipe.description || '';
+            document.getElementById('modalIngredients').innerHTML = (recipe.ingredients || []).map(i => `<li>${i}</li>`).join('');
+            document.getElementById('modalInstructions').innerHTML = (recipe.instructions || []).map(s => `<li>${s}</li>`).join('');
+            
+            // Like Button Sync
+            const isLiked = recipe.likedBy?.some(lid => lid.toString() === userId);
+            document.getElementById('modalLikeCount').innerText = recipe.likes || 0;
+            updateLikeUI(isLiked);
+            document.getElementById('modalLikeBtn').onclick = () => toggleLike(recipe._id);
+
+            // Edit Button (Only for owner)
+            const editBtn = document.getElementById('modalEditBtn');
+            if ((recipe.author?._id || recipe.author) === userId) {
+                editBtn.classList.remove('hidden');
+                editBtn.onclick = () => window.location.href = `edit-recipe.html?id=${recipe._id}`;
+            } else {
+                editBtn.classList.add('hidden');
+            }
+
+            // Comments
+            document.getElementById('modalCommentCount').innerText = recipe.comments?.length || 0;
+            document.getElementById('modalComments').innerHTML = (recipe.comments || []).map(c => `
+                <div class="bg-gray-50 p-3 rounded-xl border border-gray-100">
+                    <p class="text-[10px] font-bold text-coral">@${c.username}</p>
+                    <p class="text-sm text-gray-700">${c.text}</p>
+                </div>
+            `).join('') || '<p class="text-gray-400 text-xs italic">No comments yet.</p>';
+
+            document.getElementById('recipeViewModal').classList.remove('hidden');
+            document.body.style.overflow = 'hidden';
+            lucide.createIcons();
+        }
+
+        async function toggleLike(recipeId) {
+            try {
+                const res = await fetch(`https://pantry-pal-jur7.onrender.com/api/recipes/like/${recipeId}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ userId })
+                });
+                const data = await res.json();
+                if (res.ok) {
+                    const recipe = allRecipes.find(r => r._id === recipeId);
+                    recipe.likes = data.likes;
+                    recipe.likedBy = data.likedBy;
+                    document.getElementById('modalLikeCount').innerText = data.likes;
+                    updateLikeUI(data.isLiked);
+                    renderProfileFeed();
+                }
+            } catch (err) { console.error(err); }
+        }
+
+        function updateLikeUI(isLiked) {
+            const btn = document.getElementById('modalLikeBtn');
+            const icon = document.getElementById('modalLikeIcon');
+            if (isLiked) {
+                btn.className = "flex items-center gap-2 px-4 py-2 rounded-2xl font-bold border-2 border-red-500 bg-red-500 text-white transition-all";
+                icon.classList.add('fill-current');
+            } else {
+                btn.className = "flex items-center gap-2 px-4 py-2 rounded-2xl font-bold border-2 border-gray-100 text-gray-400 hover:border-red-200 transition-all";
+                icon.classList.remove('fill-current');
+            }
         }
 
         function switchTab(tab) {
@@ -175,18 +255,8 @@
             renderProfileFeed();
         }
 
-        function openRecipeView(id) {
-            const recipe = allRecipes.find(r => r._id === id);
-            document.getElementById('modalImage').src = recipe.image || '../default.png';
-            document.getElementById('modalTitle').innerText = recipe.title;
-            document.getElementById('modalDescription').innerText = recipe.description || '';
-            document.getElementById('modalIngredients').innerHTML = (recipe.ingredients || []).map(i => `<li>${i}</li>`).join('');
-            document.getElementById('modalInstructions').innerHTML = (recipe.instructions || []).map(s => `<li>${s}</li>`).join('');
-            document.getElementById('recipeViewModal').classList.remove('hidden');
-        }
-
         async function deleteRecipe(id) {
-            if (!confirm("Delete this recipe?")) return;
+            if (!confirm("Are you sure? This cannot be undone.")) return;
             const res = await fetch(`https://pantry-pal-jur7.onrender.com/api/recipes/${id}`, { 
                 method: 'DELETE',
                 headers: { 'Authorization': `Bearer ${token}` }
@@ -199,7 +269,10 @@
             window.location.href = "../index.html";
         }
 
-        function closeRecipeView() { document.getElementById('recipeViewModal').classList.add('hidden'); }
+        function closeRecipeView() { 
+            document.getElementById('recipeViewModal').classList.add('hidden'); 
+            document.body.style.overflow = 'auto';
+        }
 
         window.onload = initProfile;
     </script>
