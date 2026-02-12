@@ -33,7 +33,9 @@
             <a href="profilepage.html" class="flex items-center gap-4 px-5 py-2 text-gray-500 font-semibold sidebar-item transition-all"><i data-lucide="user"></i> Profile</a>
         </nav>
         <div class="border-t border-gray-100 pt-8">
-            <a href="../index.html" class="flex items-center gap-4 px-5 py-2 text-gray-500 font-semibold sidebar-item transition-all"><i data-lucide="log-out"></i> Log out</a>
+            <a href="#" onclick="handleLogout()" class="flex items-center gap-4 px-5 py-2 text-gray-500 font-semibold sidebar-item transition-all">
+                <i data-lucide="log-out"></i> Log out
+            </a>
         </div>
     </aside>
 
@@ -283,6 +285,29 @@
         document.getElementById('recipeModal').classList.add('hidden');
         document.body.style.overflow = 'auto';
     }
+    /**
+ * LOGOUT SYSTEM
+ * Clears local data and redirects to login
+ */
+
+ function handleLogout() {
+    // 1. Clear all stored user data
+    localStorage.removeItem('token');
+    localStorage.removeItem('userId');
+    localStorage.removeItem('username');
+    
+    // Optional: Clear everything if you have other stored preferences
+    // localStorage.clear(); 
+
+    // 2. Redirect to index.html (the landing/login page)
+    // Make sure the path is correct relative to homepage.html
+    window.location.href = '../index.html';
+}
+
+// PROTECT ROUTE: Redirect if not logged in
+if (!localStorage.getItem('token')) {
+    window.location.href = '../index.html';
+}
 
     // INITIALIZE
     window.onload = fetchRecipes;
