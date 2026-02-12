@@ -16,7 +16,7 @@
 </head>
 <body class="bg-gray-50 flex flex-col md:flex-row min-h-screen">
 
-    <aside class="hidden md:flex w-72 bg-white border-r border-gray-100 flex-col p-8 fixed h-full z-10">
+    <aside class="hidden md:flex w-72 bg-white border-r border-gray-100 flex flex-col p-8 fixed h-full z-10">
         <div class="text-3xl brand-font text-coral mb-12">PantryPal</div>
         <nav class="space-y-6 flex-grow text-gray-500 font-semibold">
             <a href="homepage.html" class="flex items-center gap-4 px-5 py-2 hover:text-coral transition-all"><i data-lucide="home"></i> Home</a>
@@ -43,6 +43,17 @@
             <div class="bg-white rounded-[2rem] border border-gray-100 p-8 shadow-sm">
                 <h2 class="text-2xl font-bold text-gray-900 mb-6">Basic Info</h2>
                 <div class="space-y-5">
+                    <div class="flex flex-col md:flex-row gap-6 items-center bg-gray-50 p-6 rounded-2xl border border-dashed border-gray-200">
+                        <div class="w-40 h-40 rounded-2xl overflow-hidden bg-gray-200 flex-shrink-0">
+                            <img id="imagePreview" src="../default.png" class="w-full h-full object-cover">
+                        </div>
+                        <div class="flex-grow space-y-2">
+                            <label class="block text-sm font-bold text-gray-700">Change Recipe Photo</label>
+                            <input type="file" id="imageFile" accept="image/*" onchange="previewNewImage(event)" class="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-coral file:text-white hover:file:bg-orange-600 cursor-pointer">
+                            <p class="text-xs text-gray-400">Upload a fresh photo of your dish.</p>
+                        </div>
+                    </div>
+
                     <div>
                         <label class="block text-sm font-bold text-gray-700 mb-2">Recipe Title</label>
                         <input type="text" id="title" class="w-full p-4 bg-gray-50 border border-gray-100 rounded-xl outline-none focus:ring-2 focus:ring-coral/20" required>
@@ -50,10 +61,6 @@
                     <div>
                         <label class="block text-sm font-bold text-gray-700 mb-2">Description</label>
                         <textarea id="description" rows="3" class="w-full p-4 bg-gray-50 border border-gray-100 rounded-xl outline-none resize-none" required></textarea>
-                    </div>
-                    <div>
-                        <label class="block text-sm font-bold text-gray-700 mb-2">Image URL</label>
-                        <input type="url" id="imageUrl" class="w-full p-4 bg-gray-50 border border-gray-100 rounded-xl outline-none">
                     </div>
                 </div>
             </div>
@@ -75,7 +82,7 @@
             </div>
 
             <div class="flex gap-4">
-                <button type="submit" class="bg-coral text-white font-bold px-12 py-5 rounded-2xl shadow-lg hover:scale-[1.02] transition-all">
+                <button type="submit" id="submitBtn" class="bg-coral text-white font-bold px-12 py-5 rounded-2xl shadow-lg hover:scale-[1.02] transition-all">
                     Update Recipe
                 </button>
                 <button type="button" onclick="history.back()" class="px-12 py-5 font-bold text-gray-400">
@@ -93,6 +100,14 @@
 
         if (!token || !recipeId) window.location.href = 'profilepage.html';
 
+        // Helper to convert file to Base64
+        const toBase64 = file => new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.readAsDataURL(file);
+            reader.onload = () => resolve(reader.result);
+            reader.onerror = error => reject(error);
+        });
+
         async function loadRecipeData() {
             try {
                 const response = await fetch(`https://pantry-pal-jur7.onrender.com/api/recipes`);
@@ -108,7 +123,7 @@
                 // Populate Fields
                 document.getElementById('title').value = recipe.title;
                 document.getElementById('description').value = recipe.description || '';
-                document.getElementById('imageUrl').value = recipe.image || '';
+                if (recipe.image) document.getElementById('imagePreview').src = recipe.image;
 
                 recipe.ingredients.forEach(ing => addItem('ingredientsList', 'ingredient-input', false, ing));
                 recipe.instructions.forEach(step => addItem('stepsList', 'step-input', true, step));
@@ -117,6 +132,15 @@
                 document.getElementById('editForm').classList.remove('hidden');
                 lucide.createIcons();
             } catch (err) { console.error(err); }
+        }
+
+        function previewNewImage(event) {
+            const reader = new FileReader();
+            reader.onload = function() {
+                const output = document.getElementById('imagePreview');
+                output.src = reader.result;
+            };
+            reader.readAsDataURL(event.target.files[0]);
         }
 
         function addItem(containerId, className, isTextArea = false, value = '') {
@@ -142,14 +166,25 @@
 
         document.getElementById('editForm').onsubmit = async (e) => {
             e.preventDefault();
+            const btn = document.getElementById('submitBtn');
+            btn.innerText = "Updating...";
+            btn.disabled = true;
             
             const ingredients = Array.from(document.querySelectorAll('.ingredient-input')).map(i => i.value).filter(v => v);
             const instructions = Array.from(document.querySelectorAll('.step-input')).map(i => i.value).filter(v => v);
+            const imageFile = document.getElementById('imageFile').files[0];
+
+            let recipeImage = document.getElementById('imagePreview').src;
+
+            // If user selected a NEW file, convert it to Base64
+            if (imageFile) {
+                recipeImage = await toBase64(imageFile);
+            }
 
             const updatedData = {
                 title: document.getElementById('title').value,
                 description: document.getElementById('description').value,
-                image: document.getElementById('imageUrl').value,
+                image: recipeImage,
                 ingredients,
                 instructions
             };
@@ -167,8 +202,15 @@
                 if (res.ok) {
                     alert("Recipe updated!");
                     window.location.href = 'profilepage.html';
+                } else {
+                    alert("Failed to update. Image might be too large.");
                 }
-            } catch (err) { console.error(err); }
+            } catch (err) { 
+                console.error(err); 
+            } finally {
+                btn.innerText = "Update Recipe";
+                btn.disabled = false;
+            }
         };
 
         window.onload = loadRecipeData;

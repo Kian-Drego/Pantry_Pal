@@ -17,7 +17,7 @@
 </head>
 <body class="bg-gray-50 flex flex-col md:flex-row min-h-screen">
 
-    <aside class="hidden md:flex w-72 bg-white border-r border-gray-100 flex-col p-8 fixed h-full z-10">
+    <aside class="hidden md:flex w-72 bg-white border-r border-gray-100 flex flex-col p-8 fixed h-full z-10">
         <div class="text-3xl brand-font text-coral mb-12">PantryPal</div>
         <nav class="space-y-6 flex-grow text-gray-500 font-semibold">
             <a href="homepage.html" class="flex items-center gap-4 px-5 py-2 hover:text-coral transition-all"><i data-lucide="home"></i> Home</a>
@@ -35,14 +35,6 @@
         </div>
     </aside>
 
-    <nav class="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-100 flex justify-around items-center p-4 z-50">
-        <a href="homepage.html" class="text-gray-400"><i data-lucide="home"></i></a>
-        <a href="search.html" class="text-gray-400"><i data-lucide="search"></i></a>
-        <a href="create.html" class="text-coral"><i data-lucide="plus-square"></i></a>
-        <a href="leaderboard.html" class="text-gray-400"><i data-lucide="trophy"></i></a>
-        <a href="profilepage.html" class="text-gray-400"><i data-lucide="user"></i></a>
-    </nav>
-
     <main class="flex-grow p-6 md:p-12 md:ml-72 bg-white min-h-screen pb-24 md:pb-12">
         <header class="mb-8 md:mb-10">
             <h1 class="text-4xl md:text-5xl brand-font text-coral mb-2">Share Recipe</h1>
@@ -52,6 +44,21 @@
         <form id="recipeForm" class="max-w-4xl space-y-6 md:space-y-8">
             <div class="bg-white rounded-[2rem] border border-gray-100 p-6 md:p-8 shadow-sm">
                 <h2 class="text-xl md:text-2xl font-bold text-gray-900 mb-6">Basic Info</h2>
+                
+                <div class="mb-8 flex flex-col md:flex-row gap-6 items-center bg-gray-50 p-6 rounded-3xl border-2 border-dashed border-gray-200">
+                    <div class="w-48 h-48 rounded-2xl overflow-hidden bg-gray-200 flex-shrink-0 relative group">
+                        <img id="imagePreview" src="../default.png" class="w-full h-full object-cover">
+                        <div class="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                             <i data-lucide="camera" class="text-white w-8 h-8"></i>
+                        </div>
+                    </div>
+                    <div class="flex-grow space-y-3">
+                        <label class="block text-sm font-bold text-gray-700">Recipe Photo</label>
+                        <input type="file" id="recipeFile" accept="image/*" onchange="previewImage(event)" class="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-coral file:text-white hover:file:bg-orange-600 cursor-pointer" required>
+                        <p class="text-xs text-gray-400">Upload a high-quality photo of your final dish.</p>
+                    </div>
+                </div>
+
                 <div class="space-y-5">
                     <div>
                         <label class="block text-sm font-bold text-gray-700 mb-2 ml-1">Recipe Title</label>
@@ -60,10 +67,6 @@
                     <div>
                         <label class="block text-sm font-bold text-gray-700 mb-2 ml-1">Description</label>
                         <textarea id="description" rows="3" placeholder="Tell us the story behind this dish..." class="w-full p-4 bg-gray-50 border border-gray-100 rounded-xl focus:ring-2 focus:ring-coral/20 outline-none resize-none" required></textarea>
-                    </div>
-                    <div>
-                        <label class="block text-sm font-bold text-gray-700 mb-2 ml-1">Image URL</label>
-                        <input type="url" id="imageUrl" placeholder="https://..." class="w-full p-4 bg-gray-50 border border-gray-100 rounded-xl focus:ring-2 focus:ring-coral/20 outline-none">
                     </div>
                 </div>
             </div>
@@ -95,18 +98,31 @@
     </main>
 
     <script>
-        // --- 1. PROTECTED ROUTE CHECK ---
         if (!localStorage.getItem('token')) {
             window.location.href = '../index.html';
         }
 
         lucide.createIcons();
 
-        // --- 2. LOGOUT LOGIC ---
+        // Helper to convert file to Base64
+        const toBase64 = file => new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.readAsDataURL(file);
+            reader.onload = () => resolve(reader.result);
+            reader.onerror = error => reject(error);
+        });
+
+        function previewImage(event) {
+            const reader = new FileReader();
+            reader.onload = function() {
+                const output = document.getElementById('imagePreview');
+                output.src = reader.result;
+            };
+            reader.readAsDataURL(event.target.files[0]);
+        }
+
         function handleLogout() {
-            localStorage.removeItem('token');
-            localStorage.removeItem('userId');
-            localStorage.removeItem('username');
+            localStorage.clear();
             window.location.href = '../index.html';
         }
 
@@ -127,11 +143,17 @@
 
             const ingredients = Array.from(document.querySelectorAll('.ingredient-input')).map(i => i.value).filter(v => v);
             const instructions = Array.from(document.querySelectorAll('.step-input')).map(i => i.value).filter(v => v);
+            const imageFile = document.getElementById('recipeFile').files[0];
             
+            let imageBase64 = "";
+            if (imageFile) {
+                imageBase64 = await toBase64(imageFile);
+            }
+
             const recipeData = {
                 title: document.getElementById('title').value,
                 description: document.getElementById('description').value,
-                image: document.getElementById('imageUrl').value,
+                image: imageBase64,
                 ingredients: ingredients,
                 instructions: instructions,
                 author: localStorage.getItem('userId')
@@ -151,7 +173,8 @@
                     alert('Recipe shared successfully!');
                     window.location.href = 'homepage.html';
                 } else {
-                    alert('Failed to share recipe. Please try again.');
+                    const err = await response.json();
+                    alert(err.error || 'Failed to share recipe. Image might be too large.');
                     submitBtn.disabled = false;
                     submitBtn.innerText = "Share Recipe";
                 }
