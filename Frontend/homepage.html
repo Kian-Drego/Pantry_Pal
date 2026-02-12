@@ -210,49 +210,81 @@
         lucide.createIcons(); // RE-RENDER ICONS
     }
 
-    function updateFollowButton(author) {
+    // --- FOLLOW SYSTEM (MIRRORING LIKE BUTTON LOGIC) ---
+    function updateFollowButton(isFollowing) {
         const placeholder = document.getElementById('followBtnPlaceholder');
-        if (!author) { placeholder.innerHTML = ''; return; }
-        const authorId = (author._id || author).toString();
-        if (authorId === currentUserId) { placeholder.innerHTML = ''; return; }
+        
+        // We look for the active author ID from the current modal context
+        const recipe = allRecipes.find(r => r._id === activeRecipeId);
+        if (!recipe || !recipe.author) return;
+        
+        const authorId = (recipe.author._id || recipe.author).toString();
 
-        const isFollowing = author.followers?.some(id => id.toString() === currentUserId);
+        // Don't show button if it's your own profile
+        if (authorId === currentUserId) {
+            placeholder.innerHTML = '';
+            return;
+        }
+
+        // Render the button with a specific ID
         placeholder.innerHTML = `
-            <button id="modalFollowBtn" onclick="runFollowToggle('${authorId}')" 
+            <button id="modalFollowBtn" onclick="executeFollowAction('${authorId}')" 
                 class="px-4 py-1.5 rounded-full text-[11px] font-black border-2 border-coral transition-all active:scale-90
                 ${isFollowing ? 'bg-coral text-white' : 'text-coral hover:bg-coral/10'}">
                 ${isFollowing ? 'Following' : '+ Follow'}
             </button>`;
-        lucide.createIcons();
+        
+        if (window.lucide) lucide.createIcons();
     }
 
-    async function runFollowToggle(targetUserId) {
+    async function executeFollowAction(targetUserId) {
         const btn = document.getElementById('modalFollowBtn');
-        if (!token) return;
+        if (!token) return alert("Please log in to follow chefs!");
+        
+        // Visual feedback immediately
         btn.disabled = true;
+        btn.style.opacity = "0.7";
+
         try {
-            const res = await fetch(`https://pantry-pal-jur7.onrender.com/api/auth/follow/${targetUserId}`, {
+            const response = await fetch(`https://pantry-pal-jur7.onrender.com/api/auth/follow/${targetUserId}`, {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                headers: { 
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}` 
+                },
                 body: JSON.stringify({ currentUserId })
             });
-            const data = await res.json();
+
+            const data = await response.json();
+
             if (data.success) {
+                // 1. Sync the state in our local memory for ALL recipes by this chef
                 allRecipes.forEach(recipe => {
-                    const recipeAuthorId = (recipe.author?._id || recipe.author).toString();
-                    if (recipeAuthorId === targetUserId) {
+                    const rAuthorId = (recipe.author?._id || recipe.author).toString();
+                    if (rAuthorId === targetUserId) {
                         if (!recipe.author.followers) recipe.author.followers = [];
+                        
                         if (data.isFollowing) {
-                            if (!recipe.author.followers.some(id => id.toString() === currentUserId)) recipe.author.followers.push(currentUserId);
+                            if (!recipe.author.followers.includes(currentUserId)) {
+                                recipe.author.followers.push(currentUserId);
+                            }
                         } else {
                             recipe.author.followers = recipe.author.followers.filter(id => id.toString() !== currentUserId);
                         }
                     }
                 });
-                const updatedRecipe = allRecipes.find(r => (r.author?._id || r.author).toString() === targetUserId);
-                updateFollowButton(updatedRecipe.author);
+
+                // 2. Immediate UI update (Same as updateLikeUI)
+                updateFollowButton(data.isFollowing);
             }
-        } catch (err) { console.error(err); } finally { btn.disabled = false; }
+        } catch (err) {
+            console.error("Follow error:", err);
+        } finally {
+            if (btn) {
+                btn.disabled = false;
+                btn.style.opacity = "1";
+            }
+        }
     }
 
     async function toggleLike(recipeId) {
