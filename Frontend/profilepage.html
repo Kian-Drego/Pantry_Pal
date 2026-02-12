@@ -78,6 +78,10 @@
             <h2 class="text-2xl brand-font mb-6">Edit Profile</h2>
             <form onsubmit="saveProfile(event)" class="space-y-4">
                 <div>
+                    <label class="block text-xs font-bold text-gray-400 uppercase mb-2 ml-1">Profile Picture URL</label>
+                    <input type="url" id="editProfilePic" placeholder="https://example.com/photo.jpg" class="w-full p-4 bg-gray-50 rounded-2xl outline-none focus:ring-2 focus:ring-coral/20">
+                </div>
+                <div>
                     <label class="block text-xs font-bold text-gray-400 uppercase mb-2 ml-1">Username</label>
                     <input type="text" id="editUsername" class="w-full p-4 bg-gray-50 rounded-2xl outline-none focus:ring-2 focus:ring-coral/20">
                 </div>
@@ -152,19 +156,24 @@
                     document.getElementById('displayUsername').innerText = '@' + user.username;
                     document.getElementById('displayBio').innerText = user.bio || 'Sharing the love of cooking.';
                     
-                    // Populate stats from dynamic backend counts
                     document.getElementById('followerCount').innerText = user.followers?.length || 0;
                     document.getElementById('followingCount').innerText = user.following?.length || 0;
 
                     // Populate edit inputs
                     document.getElementById('editUsername').value = user.username;
                     document.getElementById('editBio').value = user.bio || '';
+                    document.getElementById('editProfilePic').value = user.profilePic || '';
 
+                    // Update UI Image
+                    const img = document.getElementById('profilePreview');
+                    const placeholder = document.getElementById('placeholderIcon');
                     if (user.profilePic) {
-                        const img = document.getElementById('profilePreview');
                         img.src = user.profilePic;
                         img.classList.remove('hidden');
-                        document.getElementById('placeholderIcon').classList.add('hidden');
+                        placeholder.classList.add('hidden');
+                    } else {
+                        img.classList.add('hidden');
+                        placeholder.classList.remove('hidden');
                     }
                 }
             } catch (err) { console.error(err); }
@@ -218,18 +227,19 @@
             e.preventDefault();
             const username = document.getElementById('editUsername').value;
             const bio = document.getElementById('editBio').value;
+            const profilePic = document.getElementById('editProfilePic').value;
 
             try {
                 const res = await fetch(`https://pantry-pal-jur7.onrender.com/api/auth/profile/${userId}`, {
                     method: 'PUT',
                     headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-                    body: JSON.stringify({ username, bio })
+                    body: JSON.stringify({ username, bio, profilePic })
                 });
 
                 if (res.ok) {
                     localStorage.setItem('username', username);
                     toggleEditModal();
-                    loadUserData(); // Refresh UI
+                    await loadUserData(); // REFRESH UI
                 } else {
                     alert("Failed to update profile.");
                 }
