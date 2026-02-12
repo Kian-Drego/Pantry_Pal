@@ -1,19 +1,19 @@
 const router = require('express').Router();
 const Recipe = require('../models/Recipe');
+const User = require('../models/User'); // Required if you plan to update points
 
 /**
  * 1. Get all recipes for Homepage Feed
- * Populates author details (including followers for the 'Follow' button logic)
- * and likedBy IDs (for the 'Heart' icon state).
+ * Populates author and likedBy details
  */
 router.get('/', async (req, res) => {
   try {
     const recipes = await Recipe.find()
+      .sort({ createdAt: -1 }) // Show newest recipes first
       .populate({
         path: 'author',
         select: 'username followers profilePic'
-      })
-      .populate('likedBy', '_id'); 
+      });
     res.json(recipes);
   } catch (err) {
     res.status(500).json({ error: "Could not fetch recipes" });
@@ -27,6 +27,10 @@ router.post('/', async (req, res) => {
   try {
     const newRecipe = new Recipe(req.body);
     await newRecipe.save();
+    
+    // Optional: Award points to the user for posting
+    await User.findByIdAndUpdate(req.body.author, { $inc: { points: 10 } });
+
     res.status(201).json({
       message: "Recipe shared successfully!",
       recipe: newRecipe
@@ -38,9 +42,8 @@ router.post('/', async (req, res) => {
 });
 
 /**
- * 3. Toggle Like Logic
- * Uses .toString() to ensure the comparison between Frontend strings 
- * and Mongoose ObjectIds works perfectly.
+ * 3. ATOMIC Toggle Like Logic
+ * Uses $addToSet and $pull to prevent duplicate likes and race conditions
  */
 router.post('/like/:id', async (req, res) => {
   try {
@@ -50,26 +53,36 @@ router.post('/like/:id', async (req, res) => {
     const recipe = await Recipe.findById(req.params.id);
     if (!recipe) return res.status(404).json({ error: "Recipe not found" });
 
-    if (!recipe.likedBy) recipe.likedBy = [];
-
-    // Check if user already liked the recipe
+    // Check if user already liked the recipe using string comparison
     const alreadyLiked = recipe.likedBy.some(id => id.toString() === userId);
 
+    let updatedRecipe;
     if (!alreadyLiked) {
-      // Add Like
-      recipe.likedBy.push(userId);
-      recipe.likes = (recipe.likes || 0) + 1;
+      // Add Like: $addToSet ensures uniqueness
+      updatedRecipe = await Recipe.findByIdAndUpdate(
+        req.params.id,
+        { 
+          $addToSet: { likedBy: userId },
+          $inc: { likes: 1 } 
+        },
+        { new: true }
+      );
     } else {
       // Remove Like (Unlike)
-      recipe.likedBy = recipe.likedBy.filter(id => id.toString() !== userId);
-      recipe.likes = Math.max(0, (recipe.likes || 1) - 1);
+      updatedRecipe = await Recipe.findByIdAndUpdate(
+        req.params.id,
+        { 
+          $pull: { likedBy: userId },
+          $inc: { likes: -1 } 
+        },
+        { new: true }
+      );
     }
 
-    await recipe.save();
     res.json({ 
-      likes: recipe.likes, 
+      likes: updatedRecipe.likes, 
       isLiked: !alreadyLiked,
-      likedBy: recipe.likedBy 
+      likedBy: updatedRecipe.likedBy 
     });
   } catch (err) {
     console.error("Like Error:", err);
@@ -87,8 +100,8 @@ router.get('/search', async (req, res) => {
 
     const results = await Recipe.find({
       $or: [
-        { title: new RegExp(q, 'i') }, 
-        { ingredients: new RegExp(q, 'i') }
+        { title: { $regex: q, $options: 'i' } }, 
+        { ingredients: { $regex: q, $options: 'i' } }
       ]
     }).populate('author', 'username followers profilePic');
     

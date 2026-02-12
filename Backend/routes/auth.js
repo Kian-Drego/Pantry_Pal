@@ -2,10 +2,9 @@ const router = require('express').Router();
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const User = require('../models/User');
-// Ensure Recipe model is imported correctly to avoid "Recipe is not defined" errors
 const Recipe = require('../models/Recipe'); 
 
-// Register Route
+// 1. Register Route
 router.post('/register', async (req, res) => {
   try {
     const { username, email, password } = req.body;
@@ -15,11 +14,11 @@ router.post('/register', async (req, res) => {
     res.status(201).json({ message: "User created" });
   } catch (err) {
     console.error("Register Error:", err);
-    res.status(400).json({ error: err.message });
+    res.status(400).json({ error: "Username or email already exists" });
   }
 });
 
-// Login Route
+// 2. Login Route
 router.post('/login', async (req, res) => {
   try {
     const user = await User.findOne({ email: req.body.email });
@@ -36,14 +35,14 @@ router.post('/login', async (req, res) => {
 });
 
 /**
- * GET Profile Route
+ * 3. GET Profile Route
+ * Returns the user data and dynamic counts for the profile page
  */
 router.get('/profile/:id', async (req, res) => {
   try {
     const user = await User.findById(req.params.id).select('-password');
     if (!user) return res.status(404).json({ error: "User not found" });
 
-    // Ensure Recipe model is correctly referenced here
     const recipeCount = await Recipe.countDocuments({ author: req.params.id });
     
     res.json({ 
@@ -59,7 +58,7 @@ router.get('/profile/:id', async (req, res) => {
 });
 
 /**
- * Update Profile Route
+ * 4. Update Profile Route
  */
 router.put('/profile/:id', async (req, res) => {
   try {
@@ -89,49 +88,36 @@ router.put('/profile/:id', async (req, res) => {
 });
 
 /**
- * FIXED: Follow/Unfollow Toggle Route
+ * 5. ATOMIC Follow/Unfollow Toggle Route
+ * Uses $addToSet and $pull for high reliability
  */
 router.post('/follow/:id', async (req, res) => {
   try {
-    const targetUserId = req.params.id;
-    const { currentUserId } = req.body;
+    const targetUserId = req.params.id; // Person to follow
+    const { currentUserId } = req.body; // Logged in user
 
-    if (!currentUserId) {
-        return res.status(400).json({ error: "Current User ID is required" });
-    }
-
-    if (targetUserId === currentUserId) {
-      return res.status(400).json({ error: "You cannot follow yourself" });
-    }
+    if (!currentUserId) return res.status(400).json({ error: "User ID required" });
+    if (targetUserId === currentUserId) return res.status(400).json({ error: "Self-following not allowed" });
 
     const targetUser = await User.findById(targetUserId);
-    const currentUser = await User.findById(currentUserId);
+    if (!targetUser) return res.status(404).json({ error: "Chef not found" });
 
-    if (!targetUser || !currentUser) {
-      return res.status(404).json({ error: "User not found" });
-    }
-
-    // Safety check for arrays
-    if (!targetUser.followers) targetUser.followers = [];
-    if (!currentUser.following) currentUser.following = [];
-
+    // Check current state using string comparison
     const isFollowing = targetUser.followers.some(id => id.toString() === currentUserId);
 
     if (isFollowing) {
-      targetUser.followers = targetUser.followers.filter(id => id.toString() !== currentUserId);
-      currentUser.following = currentUser.following.filter(id => id.toString() !== targetUserId);
-      await targetUser.save();
-      await currentUser.save();
-      return res.json({ message: "Unfollowed successfully", isFollowing: false });
+      // Unfollow: Remove IDs from both records
+      await User.findByIdAndUpdate(targetUserId, { $pull: { followers: currentUserId } });
+      await User.findByIdAndUpdate(currentUserId, { $pull: { following: targetUserId } });
+      res.json({ message: "Unfollowed", isFollowing: false });
     } else {
-      targetUser.followers.push(currentUserId);
-      currentUser.following.push(targetUserId);
-      await targetUser.save();
-      await currentUser.save();
-      return res.json({ message: "Followed successfully", isFollowing: true });
+      // Follow: Add IDs to both records ($addToSet prevents duplicates)
+      await User.findByIdAndUpdate(targetUserId, { $addToSet: { followers: currentUserId } });
+      await User.findByIdAndUpdate(currentUserId, { $addToSet: { following: targetUserId } });
+      res.json({ message: "Followed", isFollowing: true });
     }
   } catch (err) {
-    console.error("Follow error:", err);
+    console.error("Follow route error:", err);
     res.status(500).json({ error: "Follow action failed" });
   }
 });
