@@ -7,6 +7,8 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.0.0"></script>
+    
     <link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Outfit:wght@300;400;600&display=swap" rel="stylesheet">
     <style>
         body { font-family: 'Outfit', sans-serif; }
@@ -66,17 +68,11 @@
         </div>
 
         <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
-            <div class="lg:col-span-8 bg-white border border-gray-100 rounded-[2.5rem] p-8 shadow-sm h-[400px]">
-                <h3 class="text-xl font-bold text-gray-900 mb-4">Engagement Distribution</h3>
-                <canvas id="engagementChart"></canvas>
-            </div>
-
-            <div class="lg:col-span-4 bg-coral rounded-[2.5rem] p-8 text-white flex flex-col justify-center shadow-lg relative overflow-hidden">
-                <h3 class="text-2xl font-bold mb-4">Chef Pro-Tip</h3>
-                <p class="text-lg opacity-90 leading-relaxed z-10">
-                    Your <span class="font-bold">Engagement Distribution</span> shows which interaction types are most common. Usually, a high save-to-like ratio means your recipes are highly practical!
-                </p>
-                <div class="absolute -bottom-6 -right-6 w-32 h-32 bg-white/10 rounded-full"></div>
+            <div class="lg:col-span-12 bg-white border border-gray-100 rounded-[2.5rem] p-8 shadow-sm">
+                <h3 class="text-xl font-bold text-gray-900 mb-4 text-center">Engagement Distribution</h3>
+                <div class="relative h-[400px] w-full">
+                    <canvas id="engagementChart"></canvas>
+                </div>
             </div>
         </div>
     </main>
@@ -117,40 +113,64 @@
             
             if (engagementChart) engagementChart.destroy();
 
+            // REGISTER PLUGIN to show values next to bars
+            Chart.register(ChartDataLabels);
+
             engagementChart = new Chart(ctx, {
-                type: 'bar', // Changed from 'line' to 'bar'
+                type: 'bar',
                 data: {
                     labels: ['Recipes', 'Likes', 'Saves', 'Comments'],
                     datasets: [{
-                        label: 'Performance Metrics',
                         data: [data.recipes, data.likes, data.saves, data.comments],
                         backgroundColor: [
-                            'rgba(233, 125, 91, 0.2)', // Recipes
-                            'rgba(233, 125, 91, 0.5)', // Likes
-                            'rgba(233, 125, 91, 0.7)', // Saves
-                            'rgba(233, 125, 91, 1)'    // Comments
+                            'rgba(233, 125, 91, 0.3)',
+                            'rgba(233, 125, 91, 0.5)',
+                            'rgba(233, 125, 91, 0.7)',
+                            'rgba(233, 125, 91, 1)'
                         ],
                         borderColor: '#E97D5B',
                         borderWidth: 2,
-                        borderRadius: 12, // Rounded corners for a modern look
+                        borderRadius: 15,
                         borderSkipped: false,
+                        barThickness: 50
                     }]
                 },
                 options: {
+                    indexAxis: 'y', // MAKES IT HORIZONTAL for better label visibility
                     responsive: true,
                     maintainAspectRatio: false,
+                    layout: {
+                        padding: { right: 50 } // Space for the numbers at the end
+                    },
                     plugins: {
-                        legend: { display: false }
+                        legend: { display: false },
+                        datalabels: {
+                            anchor: 'end',
+                            align: 'right',
+                            color: '#E97D5B',
+                            font: {
+                                family: 'Outfit',
+                                weight: 'bold',
+                                size: 14
+                            },
+                            formatter: (value) => {
+                                // Shortens big numbers (e.g. 10000 -> 10k)
+                                return value >= 1000 ? (value/1000).toFixed(1) + 'k' : value;
+                            }
+                        }
                     },
                     scales: {
-                        y: {
-                            beginAtZero: true,
-                            grid: { color: '#f3f4f6' },
-                            ticks: { font: { family: 'Outfit', weight: 'bold' } }
-                        },
                         x: {
+                            beginAtZero: true,
                             grid: { display: false },
-                            ticks: { font: { family: 'Outfit', weight: 'bold' } }
+                            ticks: { display: false } // Hide bottom axis since we have labels on bars
+                        },
+                        y: {
+                            grid: { display: false },
+                            ticks: { 
+                                font: { family: 'Outfit', weight: 'bold', size: 14 },
+                                color: '#111827'
+                            }
                         }
                     }
                 }
