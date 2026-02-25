@@ -68,5 +68,6 @@ const RecipeSchema = new mongoose.Schema({
  */
 RecipeSchema.index({ author: 1 });
 RecipeSchema.index({ title: 'text' });
+RecipeSchema.index({ createdAt: -1 });
 
 module.exports = mongoose.model('Recipe', RecipeSchema);

@@ -53,5 +53,6 @@ const UserSchema = new mongoose.Schema({
 // Create an index to make looking up followers/following faster as your user base grows
 UserSchema.index({ followers: 1 });
 UserSchema.index({ following: 1 });
+UserSchema.index({ points: -1 });
 
 module.exports = mongoose.model('User', UserSchema);
