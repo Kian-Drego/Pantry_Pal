@@ -63,8 +63,6 @@ const RecipeSchema = new mongoose.Schema({
 
 /**
  * INDEXING
- * Improves performance for searching by title and 
- * filtering by author (which we use in Analytics)
  */
 RecipeSchema.index({ author: 1 });
 RecipeSchema.index({ title: 'text' });
