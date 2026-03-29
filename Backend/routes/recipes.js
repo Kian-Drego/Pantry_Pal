@@ -10,7 +10,8 @@ router.get('/', async (req, res) => {
   try {
     const recipes = await Recipe.find()
       .sort({ createdAt: -1 }) 
-      .populate('author', 'username profilePic followers'); // Added followers here
+      .populate('author', 'username profilePic followers') // Added followers here
+      .lean();
     res.json(recipes);
   } catch (err) {
     res.status(500).json({ error: "Could not fetch recipes" });
@@ -120,7 +121,9 @@ router.get('/search', async (req, res) => {
         { title: { $regex: q, $options: 'i' } }, 
         { ingredients: { $regex: q, $options: 'i' } }
       ]
-    }).populate('author', 'username profilePic followers'); // Populate followers here too
+    })
+    .populate('author', 'username profilePic followers') // Populate followers here too
+    .lean();
     res.json(results);
   } catch (err) {
     res.status(500).json({ error: "Search failed" });
